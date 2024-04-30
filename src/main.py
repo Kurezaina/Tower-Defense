@@ -14,7 +14,7 @@ from gmap import *
 
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
-
+pygame.display.set_caption("Tower Défense")
 
 
 
