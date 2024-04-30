@@ -53,9 +53,9 @@ class MainGame():
 		# On place la cam au centre de la map
 		w, h = pygame.display.get_surface().get_size()
 
-		self.mapdata = Map((50,50), 64, (100,100))
-		self.x_off = -self.mapdata.get_center()[0]*64 + w/2
-		self.y_off = -self.mapdata.get_center()[1]*64+ h/2
+		self.mapdata = Map((50,50), 32, (100,100))
+		self.x_off = -self.mapdata.get_center()[0]*32 + w/2
+		self.y_off = -self.mapdata.get_center()[1]*32+ h/2
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
