@@ -25,13 +25,25 @@ class Tour():
 		self.hp = 1000
 		self.tower_type = None
 
+		
+class Minion():
+	def __init__(self):
+		self.tile = ()
+		self.hp = 1000
+		self.minion_type = None
+
 
 class MainGame():
 	def __init__(self):
  
-
+		self.current_scale = 1
+		
+		self.board = []
+		for i in range(200):
+			self.board.append([0]*200)
 		self.enemies = []
 		self.towers = []
+		
 		 
 		# 1 = Ennemi, 0 = Joueur
 		self.current_turn = 1
@@ -80,34 +92,6 @@ class MainGame():
 		"""
 
 		
-	def load_current_event(self):
-		self.event_text_box.show()
-		
-		self.event_text_box.set_text("""<font color="#FFFFFF">{value}</font>""".format(value=self.current_event.current_node.text[self.current_event.current_text_phase]))	
-		self.event_text_box.set_active_effect(pgu.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.025})		
-		self.current_event.loaded = True
-		
-		
-	def show_options(self):
-		return 
-		w, h = pygame.display.get_surface().get_size()
-		opts = len(self.current_event.current_node.options)
-		# On fait le layout des boutons 
-		rects = []
-		
-		top = opts*h/20
-		cords = self.player.cords
-		
-		for i in range(opts):
-		
-			rect = pygame.Rect((0,0), (-1, h/20))
-			rect.center = (0, cords[1]-(top-i*h/20))
-			rects.append(rect)
-
-			choice = UIButton(anchors={'centerx': 'centerx'}, relative_rect=rect, text=self.current_event.current_node.options[i], manager=self.uimanager,object_id=ObjectID(class_id="@dialogbtn"))
-				
-			self.option_btns.append(choice)
-		
 	# Mettre à jour les compteurs (goldité, réputation, etc...)
 	def update_counters(self):
 		gold_colour = ""
@@ -139,6 +123,38 @@ class MainGame():
 				surface.blit(img, (x * self.map.tilewidth,
 									   y * self.map.tileheight ))
 
+		
+		grid_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
+		grid_surface.set_alpha(64)
+		cordx = 0
+		cordy = 0
+		for i in range(self.mapdata.tiled_map_size[1]):
+			for i in range(self.mapdata.tiled_map_size[0]):
+				rect = pygame.Rect(cordx, cordy, 64, 64)
+				pygame.draw.rect(grid_surface, (0,0,0),rect, 1)
+				cordx += 64
+			cordx = 0
+			cordy += 64		
+			
+		surface.blit(grid_surface, (0,0))
+		surface = pygame.transform.smoothscale(surface, (w, h))
+				
+		
+		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
+		for layer in self.map.visible_layers:
+			if layer.name == "Chemin":
+				for x, y, gid in layer.tiles():
+					x = mapclass.tiled_cords_to_pixels(x)
+					y = mapclass.tiled_cords_to_pixels(y)
+					
+					self.board[x][y] = 1
+			elif layer.name == "Points":
+				for x, y, gid in layer.tiles():
+					x = mapclass.tiled_cords_to_pixels(x)
+					y = mapclass.tiled_cords_to_pixels(y)
+					
+					self.board[x][y] = 2					
+		
 		while self.running:
 			dt = self.clock.tick(30)/1000	
 			Keys = pygame.key.get_pressed()					
@@ -150,7 +166,7 @@ class MainGame():
 			self.screen.fill((0,0,0))
 
 
-			self.screen.blit(surface, (self.x_off,self.y_off))
+			self.screen.blit(surface, (0,0))
 			
 			w, h = pygame.display.get_surface().get_size()			
 
