@@ -11,6 +11,7 @@ from pytmx import load_pygame
 from pygame_gui.elements import UITextBox, UIButton
 from pygame_gui.core import ObjectID
 from gmap import *
+from graphe import *
 
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
@@ -39,6 +40,7 @@ class MainGame():
 		self.current_scale = 1
 		
 		self.board = []
+		self.graphe_chemin_1 = None
 		for i in range(200):
 			self.board.append([0]*200)
 		self.enemies = []
@@ -66,8 +68,8 @@ class MainGame():
 		w, h = pygame.display.get_surface().get_size()
 
 		self.mapdata = Map((50,50), 32, (100,100))
-		self.x_off = -self.mapdata.get_center()[0]*32 + w/2
-		self.y_off = -self.mapdata.get_center()[1]*32+ h/2
+		self.x_off = 0
+		self.y_off = 0
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
@@ -90,6 +92,16 @@ class MainGame():
 		self.test_rect.topleft = (230, 10)
 		self.testcounter = UITextBox(relative_rect=self.test_rect, html_text=(str(self.mask_wear)))
 		"""
+
+
+	def init_chemins(self):
+		# Initialise les graphes des chemins
+		self.graphe_chemin_1 = Graph_node(cos=(25,57))
+		nv = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(39,57)))
+		nv = nv.ajout_sortie((38,46), 0.75)
+		nv = nv.ajout_sortie((23,46),0.75)
+		nv = nv.ajout_sortie((23,18))
+		nv = nv.ajout_sortie((50,18))
 
 		
 	# Mettre à jour les compteurs (goldité, réputation, etc...)
@@ -119,7 +131,6 @@ class MainGame():
 		surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		for layer in self.map.visible_layers:
 			for x, y, img in layer.tiles():
-
 				surface.blit(img, (x * self.map.tilewidth,
 									   y * self.map.tileheight ))
 
@@ -130,14 +141,14 @@ class MainGame():
 		cordy = 0
 		for i in range(self.mapdata.tiled_map_size[1]):
 			for i in range(self.mapdata.tiled_map_size[0]):
-				rect = pygame.Rect(cordx, cordy, 64, 64)
+				rect = pygame.Rect(cordx, cordy, 32, 32)
 				pygame.draw.rect(grid_surface, (0,0,0),rect, 1)
-				cordx += 64
+				cordx += 32
 			cordx = 0
-			cordy += 64		
+			cordy += 32
 			
 		surface.blit(grid_surface, (0,0))
-		surface = pygame.transform.smoothscale(surface, (w, h))
+		surface = pygame.transform.smoothscale(surface, (w, w))
 				
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
@@ -155,6 +166,12 @@ class MainGame():
 					
 					self.board[x][y] = 2					
 		
+		
+				
+		self.bottom_camera_move = pygame.Rect(200,h-100, w-400, 100)
+		self.top_camera_move = pygame.Rect(200,-50, w-400, 100)
+								
+
 		while self.running:
 			dt = self.clock.tick(30)/1000	
 			Keys = pygame.key.get_pressed()					
@@ -163,10 +180,17 @@ class MainGame():
 					self.running = False
 					pygame.quit()
 
+			mouse_pos = pygame.mouse.get_pos()				
+			if self.bottom_camera_move.collidepoint(mouse_pos):
+				self.y_off -= 24 if self.y_off > -w + h else 0
+			elif self.top_camera_move.collidepoint(mouse_pos):
+				self.y_off += 24 if self.y_off < 0 else 0
+				
+
 			self.screen.fill((0,0,0))
 
 
-			self.screen.blit(surface, (0,0))
+			self.screen.blit(surface, (self.x_off,self.y_off))
 			
 			w, h = pygame.display.get_surface().get_size()			
 
