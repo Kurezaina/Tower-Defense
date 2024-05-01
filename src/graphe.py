@@ -1,7 +1,9 @@
+import random
+
 # Un genre de mélange entre un graphe et une linked list
 
 class Graph_node():
-	def __init__(self, entree=None, sorties=[], cos=None):
+	def __init__(self, cos=None):
 		"""
 		@param entree: La node avant celle-ci.
 		@param sorties: une liste de tuples contenant l'objet de la prochaine node et la probabilité de s'y rendre
@@ -9,10 +11,16 @@ class Graph_node():
 		"""
 		
 		self.cos = cos
-		self.entree = entree
-		self.sorties = sorties
+		self.entree = None
+		self.sorties = []
 
-	def ajout_sortie(node, proba=1):
+	def ajout_sortie(self, node, proba=1):
 		self.sorties.append((node, proba))
-		node.entree = self
 		return node
+
+	def aller_prochain(self):
+		if random.random() <= self.sorties[0][1]:
+			print("go")
+			return self.sorties[0][0]
+		else:
+			return self.sorties[1][0]

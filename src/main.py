@@ -67,9 +67,9 @@ class MainGame():
 		# On place la cam au centre de la map
 		w, h = pygame.display.get_surface().get_size()
 
-		self.mapdata = Map((50,50), 32, (100,100))
-		self.x_off = 0
-		self.y_off = 0
+		self.mapdata = Map((49,16), 32, (100,100))
+		self.x_off = -49*(w*2/100) + w/2
+		self.y_off = -24*(w*2/100) + h/2
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
@@ -92,16 +92,41 @@ class MainGame():
 		self.test_rect.topleft = (230, 10)
 		self.testcounter = UITextBox(relative_rect=self.test_rect, html_text=(str(self.mask_wear)))
 		"""
+		"""
+		self.init_chemins()
+		curr = self.graphe_chemin_1
+		while len(curr.sorties) != 0:
+			print(curr.cos)
+
+			curr = curr.aller_prochain()
+		print(curr.cos)
+		""" 
 
 
 	def init_chemins(self):
 		# Initialise les graphes des chemins
 		self.graphe_chemin_1 = Graph_node(cos=(25,57))
-		nv = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(39,57)))
-		nv = nv.ajout_sortie((38,46), 0.75)
-		nv = nv.ajout_sortie((23,46),0.75)
-		nv = nv.ajout_sortie((23,18))
-		nv = nv.ajout_sortie((50,18))
+		self.graphe_chemin_2 = Graph_node(cos=(39,61))
+		
+		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(39,57)))
+		
+		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,46)), 1)
+		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,57)), 0.25)
+		
+		self.graphe_chemin_2.ajout_sortie(ch1)
+		
+		# Chemin de gauche
+		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,46)),0.75)
+		nv = nv.ajout_sortie(Graph_node(cos=(23,18)))
+		nv = nv.ajout_sortie(Graph_node(cos=(50,18)))
+		millieu_3 = nv.ajout_sortie(Graph_node(cos=(49,10)))
+		
+		# Chemin du millieu
+		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(48,46)), 0.25)
+		millieu_2.ajout_sortie(millieu_3)
+		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
+		
+		
 
 		
 	# Mettre à jour les compteurs (goldité, réputation, etc...)
@@ -148,7 +173,7 @@ class MainGame():
 			cordy += 32
 			
 		surface.blit(grid_surface, (0,0))
-		surface = pygame.transform.smoothscale(surface, (w, w))
+		surface = pygame.transform.smoothscale(surface, (w*2, w*2))
 				
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
@@ -170,6 +195,8 @@ class MainGame():
 				
 		self.bottom_camera_move = pygame.Rect(200,h-100, w-400, 100)
 		self.top_camera_move = pygame.Rect(200,-50, w-400, 100)
+		self.right_camera_move = pygame.Rect(w-50,100, 100, h-200)
+		self.left_camera_move = pygame.Rect(-50, 100, 100, h-200)
 								
 
 		while self.running:
@@ -182,9 +209,14 @@ class MainGame():
 
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
-				self.y_off -= 24 if self.y_off > -w + h else 0
+				self.y_off -= 32 if self.y_off > -w*1.5 + h else 0
 			elif self.top_camera_move.collidepoint(mouse_pos):
-				self.y_off += 24 if self.y_off < 0 else 0
+				self.y_off += 32 if self.y_off < 0 else 0
+			elif self.right_camera_move.collidepoint(mouse_pos):
+				self.x_off -= 32 if self.x_off > -w else 0
+			elif self.left_camera_move.collidepoint(mouse_pos):
+				self.x_off += 32 if self.x_off < 0 else 0
+				
 				
 
 			self.screen.fill((0,0,0))
