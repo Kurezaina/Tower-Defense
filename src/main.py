@@ -36,7 +36,7 @@ class Tour():
 		board[self.center_tile[0]][self.center_tile[1]] = self.id
 		w, h = pygame.display.get_surface().get_size()
 		
-		self.cos_pixel = (self.center_tile[0]*(w*1.6/100)- 50, self.center_tile[1]*(w*1.6/100)- 50)		
+		self.cos_pixel = (self.center_tile[0]*(w*1.6/100)- 50, self.center_tile[1]*(w*1.6/100)- 50)
 	def targetable_minions(self, minions):
 		ret = []
 		for i in minions:
@@ -79,7 +79,7 @@ class Minion():
 			self.node = self.node.aller_prochain()
 			
 	def mouvement_board(self):
-		
+		return
 		# On retire le minion de la position ou il était preccedemment
 		
 		self.board[self.cos[0]][self.cos[1]] = 0
@@ -315,8 +315,9 @@ class MainGame():
 		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
 						
 		self.minion_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Ennemis/Squelette/squelettes.png"))
-		self.minion_img = pygame.transform.scale(self.minion_img, (64,64))
+		self.minion_img = pygame.transform.scale(self.minion_img, (80,80))
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
+		self.tour_img = pygame.transform.scale(self.tour_img, (120,120))
 								
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
