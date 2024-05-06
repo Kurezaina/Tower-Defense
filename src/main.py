@@ -32,8 +32,71 @@ class Minion():
 		self.tile = ()
 		self.hp = 1000
 		self.minion_type = None
-
-
+		self.node = None
+		
+		self.cos = (0,0)
+		self.cos_pixel = (0,0)
+		self.board = None
+				
+		
+	def spawn(self, node, board):
+		self.cos = node.cos
+		self.node = node.aller_prochain()
+		
+		board[self.cos[0]][self.cos[1]] = self
+		self.update_cos_pixel()
+		
+	def update_cos_pixel(self):
+		w, h = pygame.display.get_surface().get_size()
+		
+		self.cos_pixel = (self.cos[0]*(w*1.6/100), self.cos[1]*(w*1.6/100))
+	def update_chemin(self):
+		if self.cos == self.node.cos:
+			self.node = self.node.aller_prochain()
+			
+	def mouvement_board(self):
+		self.board[self.cos[0]][self.cos[1]] = 0
+		diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
+		mouvement = (0,0)
+		if diff[1] > 0:
+			mouvement = (0,1)
+		elif diff[1] < 0:
+			mouvement = (0,-1)
+		elif diff[0] > 0:
+			mouvement = (1,0)
+		elif diff[0] < 0:
+			mouvement = (-1,0)
+						
+		nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
+		self.cos = nouv_cos
+		self.update_cos_pixel()
+		self.update_chemin()
+	def mouvement_pixel(self):
+		return
+		w, h = pygame.display.get_surface().get_size()
+		
+		diff = (self.node.cos[0]*(w*1.6/100) - self.cos_pixel[0], self.node.cos[1]*(w*1.6/100) - self.cos_pixel[1])
+		mouvement = (0,0)
+		if diff[1] > 0:
+			mouvement = (0,w*1.6/100)
+		elif diff[1] < 0:
+			mouvement = (0,w*1.6/100)
+		elif diff[0] > 0:
+			mouvement = (w*1.6/100,0)
+		elif diff[0] < 0:
+			mouvement = (w*1.6/100,0)
+			
+		
+						
+		nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
+		print(nouv_cos)
+		self.cos_pixel = nouv_cos
+		
+		if nouv_cos[0] % (w*0.016) == 0 or nouv_cos[1] % (w*0.016) == 0:
+			self.mouvement_board()
+			
+		self.update_chemin()
+			
 class MainGame():
 	def __init__(self):
  
@@ -43,9 +106,11 @@ class MainGame():
 		self.graphe_chemin_1 = None
 		for i in range(200):
 			self.board.append([0]*200)
+
 		self.enemies = []
 		self.towers = []
 		
+		self.minion_img = 0
 		 
 		# 1 = Ennemi, 0 = Joueur
 		self.current_turn = 1
@@ -68,8 +133,8 @@ class MainGame():
 		w, h = pygame.display.get_surface().get_size()
 
 		self.mapdata = Map((49,16), 32, (100,100))
-		self.x_off = -49*(w*2/100) + w/2
-		self.y_off = -24*(w*2/100) + h/2
+		self.x_off = -49*(w*1.6/100) + w/2
+		self.y_off = -24*(w*1.6/100) + h/2
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
@@ -92,17 +157,20 @@ class MainGame():
 		self.test_rect.topleft = (230, 10)
 		self.testcounter = UITextBox(relative_rect=self.test_rect, html_text=(str(self.mask_wear)))
 		"""
-		"""
+
+		self.minions = []
+		self.towers = []
 		self.init_chemins()
-		curr = self.graphe_chemin_1
-		while len(curr.sorties) != 0:
-			print(curr.cos)
-
-			curr = curr.aller_prochain()
-		print(curr.cos)
-		""" 
-
-
+		minion = Minion()
+		minion.board = self.board
+		minion.spawn(self.graphe_chemin_1, self.board)
+		self.minions.append(minion)
+		
+	def update_all_mvmt(self):
+		for i in self.minions:
+			i.mouvement_board()
+		
+									
 	def init_chemins(self):
 		# Initialise les graphes des chemins
 		self.graphe_chemin_1 = Graph_node(cos=(25,57))
@@ -155,9 +223,11 @@ class MainGame():
 		w, h = pygame.display.get_surface().get_size() 			
 		surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		for layer in self.map.visible_layers:
+			
 			for x, y, img in layer.tiles():
-				surface.blit(img, (x * self.map.tilewidth,
-									   y * self.map.tileheight ))
+				if img:
+					surface.blit(img, (x * self.map.tilewidth,
+										   y * self.map.tileheight ))
 
 		
 		grid_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
@@ -173,7 +243,7 @@ class MainGame():
 			cordy += 32
 			
 		surface.blit(grid_surface, (0,0))
-		surface = pygame.transform.smoothscale(surface, (w*2, w*2))
+		surface = pygame.transform.smoothscale(surface, (w*1.6, w*1.6))
 				
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
@@ -193,12 +263,19 @@ class MainGame():
 		
 		
 				
-		self.bottom_camera_move = pygame.Rect(200,h-100, w-400, 100)
-		self.top_camera_move = pygame.Rect(200,-50, w-400, 100)
-		self.right_camera_move = pygame.Rect(w-50,100, 100, h-200)
-		self.left_camera_move = pygame.Rect(-50, 100, 100, h-200)
+		self.bottom_camera_move = pygame.Rect(0,h-100, w, 100)
+		self.top_camera_move = pygame.Rect(0,-50, w, 100)
+		self.right_camera_move = pygame.Rect(w-50,0, 100, h)
+		self.left_camera_move = pygame.Rect(-50, 0, 100, h)
+						
+		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
+						
+		self.minion_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Ennemis/Squelette/squelettes.png"))
 								
+		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
+		move_event, t, trail = pygame.USEREVENT+1, 250, []								
 
+		pygame.time.set_timer(move_event, t)
 		while self.running:
 			dt = self.clock.tick(30)/1000	
 			Keys = pygame.key.get_pressed()					
@@ -206,24 +283,31 @@ class MainGame():
 				if event.type == pygame.QUIT:
 					self.running = False
 					pygame.quit()
+				elif event.type == move_event:
+					self.update_all_mvmt()
 
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
-				self.y_off -= 32 if self.y_off > -w*1.5 + h else 0
-			elif self.top_camera_move.collidepoint(mouse_pos):
-				self.y_off += 32 if self.y_off < 0 else 0
-			elif self.right_camera_move.collidepoint(mouse_pos):
-				self.x_off -= 32 if self.x_off > -w else 0
-			elif self.left_camera_move.collidepoint(mouse_pos):
-				self.x_off += 32 if self.x_off < 0 else 0
+				self.y_off -= 48 if self.y_off > -w*1.5 + h else 0
+			if self.top_camera_move.collidepoint(mouse_pos):
+				self.y_off += 48 if self.y_off < 0 else 0
+			if self.right_camera_move.collidepoint(mouse_pos):
+				self.x_off -= 48 if self.x_off > -w else 0
+			if self.left_camera_move.collidepoint(mouse_pos):
+				self.x_off += 48 if self.x_off < 0 else 0
 				
 				
 
+
+			
 			self.screen.fill((0,0,0))
 
 
+
+
 			self.screen.blit(surface, (self.x_off,self.y_off))
-			
+			for i in self.minions:
+				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 116/2 , i.cos_pixel[1] + self.y_off))
 			w, h = pygame.display.get_surface().get_size()			
 
 			self.update_counters()
