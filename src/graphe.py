@@ -20,7 +20,6 @@ class Graph_node():
 
 	def aller_prochain(self):
 		if random.random() <= self.sorties[0][1]:
-			print("go")
 			return self.sorties[0][0]
 		else:
 			return self.sorties[1][0]
