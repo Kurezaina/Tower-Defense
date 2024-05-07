@@ -12,15 +12,13 @@ from pygame_gui.elements import UITextBox, UIButton
 from pygame_gui.core import ObjectID
 from gmap import *
 from graphe import *
+from ennemi import Vague, Minion
 
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
 pygame.display.set_caption("Tower Défense")
 scale_factor = 0
 
-
-
-		
 class Tour():
 	def __init__(self):
 		self.center_tile = ()
@@ -36,7 +34,7 @@ class Tour():
 		board[self.center_tile[0]][self.center_tile[1]] = self.id
 		w, h = pygame.display.get_surface().get_size()
 		
-		self.cos_pixel = (self.center_tile[0]*(w*1.6/100)- 50, self.center_tile[1]*(w*1.6/100)- 50)
+		self.cos_pixel = (self.center_tile[0]*(w*1.6/100)- 50, self.center_tile[1]*(w*1.6/100)- 55)
 	def targetable_minions(self, minions):
 		ret = []
 		for i in minions:
@@ -47,94 +45,20 @@ class Tour():
 		return ret
 
 		
-class Minion():
-	def __init__(self):
-		self.tile = ()
-		self.hp = 1000
-		self.minion_type = None
-		self.node = None
-		
-		self.cos = (0,0)
-		self.cos_pixel = (0,0)
-		self.board = None
-				
-	def check_hp(self):
-		if self.hp <= 0:
-			return False
-		return True
-		
-	def spawn(self, node, board):
-		self.cos = node.cos
-		self.node = node.aller_prochain()
-		
-		board[self.cos[0]][self.cos[1]] = self
-		self.update_cos_pixel()
-		
-	def update_cos_pixel(self):
-		w, h = pygame.display.get_surface().get_size()
-		
-		self.cos_pixel = (self.cos[0]*(w*1.6/100) , self.cos[1]*(w*1.6/100))
-	def update_chemin(self):
-		if self.cos == self.node.cos:
-			self.node = self.node.aller_prochain()
-			
-	def mouvement_board(self):
-		return
-		# On retire le minion de la position ou il était preccedemment
-		
-		self.board[self.cos[0]][self.cos[1]] = 0
-		diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
-		mouvement = (0,0)
-		if diff[1] > 0:
-			mouvement = (0,1)
-		elif diff[1] < 0:
-			mouvement = (0,-1)
-		elif diff[0] > 0:
-			mouvement = (1,0)
-		elif diff[0] < 0:
-			mouvement = (-1,0)
-						
-		nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
-		self.cos = nouv_cos
-		self.update_cos_pixel()
-		self.update_chemin()
-	def mouvement_pixel(self):
-		#TODO, NE FONCTIONNE PAS!
-		
-		return
-		w, h = pygame.display.get_surface().get_size()
-		
-		diff = (self.node.cos[0]*(w*1.6/100) - self.cos_pixel[0], self.node.cos[1]*(w*1.6/100) - self.cos_pixel[1])
-		mouvement = (0,0)
-		if diff[1] > 0:
-			mouvement = (0,scale_factor)
-		elif diff[1] < 0:
-			mouvement = (0,scale_factor)
-		elif diff[0] > 0:
-			mouvement = (scale_factor,0)
-		elif diff[0] < 0:
-			mouvement = (scale_factor,0)
-			
-		
-						
-		nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
-		print(nouv_cos)
-		self.cos_pixel = nouv_cos
-		
-		if nouv_cos[0] % (w*0.016) == 0 or nouv_cos[1] % (w*0.016) == 0:
-			self.mouvement_board()
-			
-		self.update_chemin()
-			
+
 class MainGame():
 	def __init__(self):
- 
+
+
 		self.current_scale = 1
 		
 		self.board = []
 		self.graphe_chemin_1 = None
 		for i in range(200):
 			self.board.append([0]*200)
+
+		self.minion = Minion()
+		self.vague = Vague()
 
 		self.enemies = []
 		self.towers = []
@@ -172,6 +96,8 @@ class MainGame():
 
 
 		self.gold = 0
+		self.gold_squelette = 7
+		self.gold_gobelin = 5
 		# UI
 		
 		self.uimanager = pgu.UIManager((w, h), os.path.join(dossier, "theme.json"))
@@ -239,6 +165,7 @@ class MainGame():
 			for m in t.targetable_minions(self.minions):
 				m.hp -= t.damage
 				if not m.check_hp():
+					self.gold += 7
 					self.minions.remove(m)
 
 	# Mettre à jour les compteurs (goldité, réputation, etc...)
@@ -250,7 +177,7 @@ class MainGame():
 		else:
 			# Blanc
 			gold_colour = "#FFFFFF"
-			
+
 		rep_colour = ""
 		
 		html_gold = """<font color="{colour}">{value}</font>""".format(colour=gold_colour, value=str(self.gold))
@@ -288,7 +215,14 @@ class MainGame():
 			
 		surface.blit(grid_surface, (0,0))
 		surface = pygame.transform.smoothscale(surface, (w*1.6, w*1.6))
-				
+
+		self.ennemies_in_vague = self.vague.vague_dico["vague" + str(self.minion.current_vague)]
+		for _, spawn in enumerate(self.ennemies_in_vague):
+			print(spawn)
+			for _ in range(spawn[1]):
+				self.minion.spawn(self.graphe_chemin_1, self.board)
+				self.minions.append(self.minion)
+
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
 		for layer in self.map.visible_layers:
@@ -317,7 +251,6 @@ class MainGame():
 		self.minion_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Ennemis/Squelette/squelettes.png"))
 		self.minion_img = pygame.transform.scale(self.minion_img, (80,80))
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
-		self.tour_img = pygame.transform.scale(self.tour_img, (120,120))
 								
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
