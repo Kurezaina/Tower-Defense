@@ -30,7 +30,10 @@ class MainGame():
 		self.current_scale = 1
 		
 		self.board = []
+		# Graphes chemins
 		self.graphe_chemin_1 = None
+		self.graphe_chemin_3 = None
+		
 		for i in range(200):
 			self.board.append([0]*200)
 
@@ -134,6 +137,16 @@ class MainGame():
 		millieu_2.ajout_sortie(millieu_3)
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
+		# Chemin sud-centre
+		self.graphe_chemin_3 = Graph_node(cos=(63,73))
+		ch3 = self.graphe_chemin_3.ajout_sortie(Graph_node(cos=(39,73)))
+		ch3 = ch3.ajout_sortie(Graph_node(cos=(39, 58)))
+		
+		# Chemin de droite
+		ch4 = ch3.ajout_sortie(Graph_node(cos=(49,58)))
+		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,58)))
+		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,20)))
+		ch4.ajout_sortie(nv)
 		
 
 		
@@ -260,8 +273,12 @@ class MainGame():
 					if random.random() < 0.5:
 						minion = Minion()
 						minion.board = self.board
-						minion.spawn(self.graphe_chemin_1, self.board)		
-						self.minions.append(minion)			
+						self.minions.append(minion)	
+						if random.random() < 0.5:
+							minion.spawn(self.graphe_chemin_1, self.board)		
+						else:
+							minion.spawn(self.graphe_chemin_3, self.board)		
+							
 				elif event.type == gold_income_event:
 					self.gold += self.gold_income	
 					self.update_counters()
@@ -285,11 +302,11 @@ class MainGame():
 					
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
-				self.y_off -= 48 if self.y_off > -w*1.5 + h else 0
+				self.y_off -= 48 if self.y_off > -w*1.6 + h else 0
 			if self.top_camera_move.collidepoint(mouse_pos):
 				self.y_off += 48 if self.y_off < 0 else 0
 			if self.right_camera_move.collidepoint(mouse_pos):
-				self.x_off -= 48 if self.x_off > -w else 0
+				self.x_off -= 48 if self.x_off > -w*1.6 else 0
 			if self.left_camera_move.collidepoint(mouse_pos):
 				self.x_off += 48 if self.x_off < 0 else 0
 				

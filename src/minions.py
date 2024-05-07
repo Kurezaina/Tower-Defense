@@ -1,4 +1,5 @@
 import pygame
+import common 
 
 class Minion():
 	def __init__(self):
@@ -32,11 +33,15 @@ class Minion():
 			self.node = self.node.aller_prochain()
 			
 	def mouvement_board(self):
-		# On retire le minion de la position ou il était preccedemment
 		
+		# On retire le minion de la position ou il était preccedemment
 		self.board[self.cos[0]][self.cos[1]] = 0
+		
+		# On calcule la différence entre les coordonnées de la node vers laquelle le minion se dirige
+		# Et ses coordonnées
 		diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
 		mouvement = (0,0)
+		# On se déplace en fonction de cette différence
 		if diff[1] > 0:
 			mouvement = (0,1)
 		elif diff[1] < 0:
@@ -59,13 +64,13 @@ class Minion():
 		diff = (self.node.cos[0]*(w*1.6/100) - self.cos_pixel[0], self.node.cos[1]*(w*1.6/100) - self.cos_pixel[1])
 		mouvement = (0,0)
 		if diff[1] > 0:
-			mouvement = (0,scale_factor)
+			mouvement = (0,common.scale_factor)
 		elif diff[1] < 0:
-			mouvement = (0,scale_factor)
+			mouvement = (0,common.scale_factor)
 		elif diff[0] > 0:
-			mouvement = (scale_factor,0)
+			mouvement = (common.scale_factor,0)
 		elif diff[0] < 0:
-			mouvement = (scale_factor,0)
+			mouvement = (common.scale_factor,0)
 			
 		
 						
