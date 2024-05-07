@@ -96,6 +96,7 @@ class MainGame():
 
 		self.minions = []
 		self.tours = []
+		self.fleches = []
 		self.init_chemins()
 		minion = Minion()
 		minion.board = self.board
@@ -153,14 +154,14 @@ class MainGame():
 	def attaques_tours(self):
 		for t in self.tours:
 			for m in t.targetable_minions(self.minions):
+				fleche = Fleche(m, t.cos_pixel, self.arrow_img, self.screen)
+				self.fleches.append(fleche)
 				m.hp -= t.damage
 				if not m.check_hp():
 					self.minions.remove(m)
 
 	# Mettre à jour les compteurs (gold)
 	def update_counters(self):
-		print("maj")
-		print(self.gold)
 		gold_colour = ""
 		if self.gold < 0:
 			# Rouge
@@ -236,7 +237,8 @@ class MainGame():
 		self.minion_img = pygame.transform.scale(self.minion_img, (80,80))
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
 		self.tour_img = pygame.transform.scale(self.tour_img, (3*w*1.6/100, 3*w*1.6/100))
-								
+		self.arrow_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/fleche.png"))
+		
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
 		
@@ -244,7 +246,7 @@ class MainGame():
 		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
 		
 		# Event pour le spawn des ennemis toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 900, []								
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 1200, []								
 								
 		# Event pour le gain d'or toutes les secondes ms
 		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
@@ -325,7 +327,12 @@ class MainGame():
 				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
-								
+			for i in self.fleches:
+				i.update_mouvement()
+				if i.check_done():
+					self.fleches.remove(i)
+				self.screen.blit(i.model, (i.cos[0] + self.x_off, i.cos[1] + self.y_off))
+					
 			w, h = pygame.display.get_surface().get_size()			
 
 			self.uimanager.update(dt)	
