@@ -2,12 +2,17 @@
 
 import pygame
 import os
-from math import sqrt, dist
+from math import sqrt, dist, floor
 
 import pygame_gui as pgu
 import itertools as it
 # Pour les maps de tiled
 from pytmx import load_pygame
+
+from minions import *
+from tours import *
+import common
+
 from pygame_gui.elements import UITextBox, UIButton
 from pygame_gui.core import ObjectID
 from gmap import *
@@ -17,6 +22,7 @@ from ennemi import Vague, Minion
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
 pygame.display.set_caption("Tower Défense")
+<<<<<<< HEAD
 scale_factor = 0
 
 class Tour():
@@ -46,6 +52,11 @@ class Tour():
 
 		
 
+=======
+
+
+		
+>>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 class MainGame():
 	def __init__(self):
 
@@ -53,7 +64,10 @@ class MainGame():
 		self.current_scale = 1
 		
 		self.board = []
+		# Graphes chemins
 		self.graphe_chemin_1 = None
+		self.graphe_chemin_3 = None
+		
 		for i in range(200):
 			self.board.append([0]*200)
 
@@ -85,19 +99,27 @@ class MainGame():
 		
 		# On place la cam au centre de la map
 		w, h = pygame.display.get_surface().get_size()
-		scale_factor = w*1.6/100
+		common.scale_factor = w*1.6/100
 		
 
 		self.mapdata = Map((49,16), 32, (100,100))
-		self.x_off = -49*scale_factor+ w/2
-		self.y_off = -24*scale_factor + h/2
+		self.x_off = -49*common.scale_factor+ w/2
+		self.y_off = -24*common.scale_factor + h/2
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
+<<<<<<< HEAD
 
 		self.gold = 0
 		self.gold_squelette = 7
 		self.gold_gobelin = 5
+=======
+		# OR
+		self.gold = 10
+		self.gold_income = 100
+		
+		
+>>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 		# UI
 		
 		self.uimanager = pgu.UIManager((w, h), os.path.join(dossier, "theme.json"))
@@ -118,6 +140,7 @@ class MainGame():
 
 		self.minions = []
 		self.tours = []
+		self.fleches = []
 		self.init_chemins()
 		minion = Minion()
 		minion.board = self.board
@@ -136,10 +159,12 @@ class MainGame():
 									
 	def init_chemins(self):
 		# Initialise les graphes des chemins
-		self.graphe_chemin_1 = Graph_node(cos=(25,57))
+		self.graphe_chemin_1 = Graph_node(cos=(27,70))
+		
+		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(27,58)))
 		self.graphe_chemin_2 = Graph_node(cos=(39,61))
 		
-		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(39,57)))
+		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,57)))
 		
 		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,46)), 1)
 		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,57)), 0.25)
@@ -157,18 +182,30 @@ class MainGame():
 		millieu_2.ajout_sortie(millieu_3)
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
+		# Chemin sud-centre
+		self.graphe_chemin_3 = Graph_node(cos=(63,73))
+		ch3 = self.graphe_chemin_3.ajout_sortie(Graph_node(cos=(39,73)))
+		ch3 = ch3.ajout_sortie(Graph_node(cos=(39, 58)))
+		
+		# Chemin de droite
+		ch4 = ch3.ajout_sortie(Graph_node(cos=(49,58)))
+		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,58)))
+		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,20)))
+		ch4.ajout_sortie(nv)
 		
 
 		
 	def attaques_tours(self):
 		for t in self.tours:
 			for m in t.targetable_minions(self.minions):
+				fleche = Fleche(m, t.cos_pixel, self.arrow_img, self.screen)
+				self.fleches.append(fleche)
 				m.hp -= t.damage
 				if not m.check_hp():
 					self.gold += 7
 					self.minions.remove(m)
 
-	# Mettre à jour les compteurs (goldité, réputation, etc...)
+	# Mettre à jour les compteurs (gold)
 	def update_counters(self):
 		gold_colour = ""
 		if self.gold < 0:
@@ -251,14 +288,31 @@ class MainGame():
 		self.minion_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Ennemis/Squelette/squelettes.png"))
 		self.minion_img = pygame.transform.scale(self.minion_img, (80,80))
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
+<<<<<<< HEAD
 								
+=======
+		self.tour_img = pygame.transform.scale(self.tour_img, (3*w*1.6/100, 3*w*1.6/100))
+		self.arrow_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/fleche.png"))
+		
+>>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
-		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []								
+		
+		# Event pour l'attaque des tours toutes les 900ms
+		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
+		
+		# Event pour le spawn des ennemis toutes les 900ms						
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 1200, []								
 								
+		# Event pour le gain d'or toutes les secondes ms
+		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
+		
 
 		pygame.time.set_timer(move_event, t)
 		pygame.time.set_timer(tour_event, t2)
+		pygame.time.set_timer(minion_spawn_roll_event, t3)
+		pygame.time.set_timer(gold_income_event, t4)
+		
 		
 		while self.running:
 			
@@ -273,14 +327,44 @@ class MainGame():
 				elif event.type == tour_event:
 					self.attaques_tours()				
 					
+				elif event.type == minion_spawn_roll_event:
+					if random.random() < 0.5:
+						minion = Minion()
+						minion.board = self.board
+						self.minions.append(minion)	
+						if random.random() < 0.5:
+							minion.spawn(self.graphe_chemin_1, self.board)		
+						else:
+							minion.spawn(self.graphe_chemin_3, self.board)		
+							
+				elif event.type == gold_income_event:
+					self.gold += self.gold_income	
+					self.update_counters()
+					
+					
+				elif event.type == pygame.MOUSEBUTTONUP:
+					cos = pygame.mouse.get_pos()
+					# On transforme les coordonnées en pixel en coordonnées en tuiles.
+					
+					cos_tile = (int((cos[0] - self.x_off)//common.scale_factor), int((cos[1] - self.y_off)//common.scale_factor))
+					if self.gold >= 500:
+						tour = Tour()
+						tour.center_tile = cos_tile
+						tour.spawn(self.board)
+						
+						self.tours.append(tour)
+						self.gold -= 500
+						self.update_counters()
 
+					print(cos_tile)
+					
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
-				self.y_off -= 48 if self.y_off > -w*1.5 + h else 0
+				self.y_off -= 48 if self.y_off > -w*1.6 + h else 0
 			if self.top_camera_move.collidepoint(mouse_pos):
 				self.y_off += 48 if self.y_off < 0 else 0
 			if self.right_camera_move.collidepoint(mouse_pos):
-				self.x_off -= 48 if self.x_off > -w else 0
+				self.x_off -= 48 if self.x_off > -w*1.6 else 0
 			if self.left_camera_move.collidepoint(mouse_pos):
 				self.x_off += 48 if self.x_off < 0 else 0
 				
@@ -296,13 +380,17 @@ class MainGame():
 			self.screen.blit(surface, (self.x_off,self.y_off))
 
 			for i in self.minions:
-				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 116/2 , i.cos_pixel[1] + self.y_off))
+				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
-								
+			for i in self.fleches:
+				i.update_mouvement()
+				if i.check_done():
+					self.fleches.remove(i)
+				self.screen.blit(i.model, (i.cos[0] + self.x_off, i.cos[1] + self.y_off))
+					
 			w, h = pygame.display.get_surface().get_size()			
 
-			self.update_counters()
 			self.uimanager.update(dt)	
 												
 			self.uimanager.draw_ui(self.screen)
