@@ -1,5 +1,5 @@
 import pygame
-
+import common
 
 class Minion():
     def __init__(self):

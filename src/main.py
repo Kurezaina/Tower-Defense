@@ -9,7 +9,7 @@ import itertools as it
 # Pour les maps de tiled
 from pytmx import load_pygame
 
-from minions import *
+from ennemi import *
 from tours import *
 import common
 
@@ -22,41 +22,9 @@ from ennemi import Vague, Minion
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
 pygame.display.set_caption("Tower Défense")
-<<<<<<< HEAD
 scale_factor = 0
 
-class Tour():
-	def __init__(self):
-		self.center_tile = ()
-		self.cos_pixel = ()
-		self.rayon_atk = 5
-		self.hp = 1000
-		self.damage = 200
-		self.id = 20
-		self.tower_type = None
-		
-	
-	def spawn(self, board):
-		board[self.center_tile[0]][self.center_tile[1]] = self.id
-		w, h = pygame.display.get_surface().get_size()
-		
-		self.cos_pixel = (self.center_tile[0]*(w*1.6/100)- 50, self.center_tile[1]*(w*1.6/100)- 55)
-	def targetable_minions(self, minions):
-		ret = []
-		for i in minions:
-			if dist(i.cos, self.center_tile) <= self.rayon_atk:
-				ret.append(i)
-				return ret
-				
-		return ret
 
-		
-
-=======
-
-
-		
->>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 class MainGame():
 	def __init__(self):
 
@@ -87,9 +55,6 @@ class MainGame():
 		self.pos_x_minimap = 0
 		self.pos_y_minimap = 0
 		self.running = True
-
-		self.new_x_off = 0
-		self.new_y_off = 0
 		
 		# Une clock
 		self.clock = pygame.time.Clock()
@@ -108,18 +73,14 @@ class MainGame():
 			
 		self.map = load_pygame(os.path.join(dossier,"../Map/Map/Map.tmx"))
 
-<<<<<<< HEAD
 
-		self.gold = 0
-		self.gold_squelette = 7
-		self.gold_gobelin = 5
-=======
+
 		# OR
 		self.gold = 10
 		self.gold_income = 100
+		self.gold_squelette = 7
+		self.gold_gobelin = 5		
 		
-		
->>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 		# UI
 		
 		self.uimanager = pgu.UIManager((w, h), os.path.join(dossier, "theme.json"))
@@ -128,16 +89,13 @@ class MainGame():
 		self.goldcounter = UITextBox(relative_rect=self.gold_rect, html_text=str(self.gold))
 		
 		"""
-		
-		self.reputation_rect = pygame.Rect((0, 0), (80, 30))
-		self.reputation_rect.topleft = (130, 10)		
-		self.reputationcounter = UITextBox(relative_rect=self.reputation_rect, html_text=(str(self.reputation*100) + "%"))
-
+	
 		self.test_rect = pygame.Rect((0, 0), (80, 30))
 		self.test_rect.topleft = (230, 10)
 		self.testcounter = UITextBox(relative_rect=self.test_rect, html_text=(str(self.mask_wear)))
 		"""
-
+	
+		self.spawn_stack = []
 		self.minions = []
 		self.tours = []
 		self.fleches = []
@@ -201,6 +159,7 @@ class MainGame():
 				fleche = Fleche(m, t.cos_pixel, self.arrow_img, self.screen)
 				self.fleches.append(fleche)
 				m.hp -= t.damage
+				print(m.hp)
 				if not m.check_hp():
 					self.gold += 7
 					self.minions.remove(m)
@@ -257,8 +216,10 @@ class MainGame():
 		for _, spawn in enumerate(self.ennemies_in_vague):
 			print(spawn)
 			for _ in range(spawn[1]):
-				self.minion.spawn(self.graphe_chemin_1, self.board)
-				self.minions.append(self.minion)
+				minion = Minion()
+				minion.board = self.board
+				minion.spawn(self.graphe_chemin_1, self.board)
+				self.spawn_stack.append(minion)
 
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
@@ -288,13 +249,10 @@ class MainGame():
 		self.minion_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Ennemis/Squelette/squelettes.png"))
 		self.minion_img = pygame.transform.scale(self.minion_img, (80,80))
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
-<<<<<<< HEAD
-								
-=======
+
 		self.tour_img = pygame.transform.scale(self.tour_img, (3*w*1.6/100, 3*w*1.6/100))
 		self.arrow_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/fleche.png"))
 		
->>>>>>> 928185f77a441f005e5164a5c90e23f1a17e3723
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
 		
@@ -302,16 +260,19 @@ class MainGame():
 		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
 		
 		# Event pour le spawn des ennemis toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 1200, []								
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 2000, []								
 								
 		# Event pour le gain d'or toutes les secondes ms
 		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
-		
+
+		# Event pour le spawn d'un mob de la vague actuelle
+		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 150, []								
 
 		pygame.time.set_timer(move_event, t)
 		pygame.time.set_timer(tour_event, t2)
 		pygame.time.set_timer(minion_spawn_roll_event, t3)
 		pygame.time.set_timer(gold_income_event, t4)
+		pygame.time.set_timer(curr_wave_spawn_event, t5)
 		
 		
 		while self.running:
@@ -358,6 +319,12 @@ class MainGame():
 
 					print(cos_tile)
 					
+				elif event.type == curr_wave_spawn_event:
+					if len(self.spawn_stack) > 0:
+						self.minions.append(self.spawn_stack[0])
+						self.spawn_stack.pop(0)					
+
+
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
 				self.y_off -= 48 if self.y_off > -w*1.6 + h else 0
