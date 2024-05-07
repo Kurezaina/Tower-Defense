@@ -13,7 +13,7 @@ class Fleche():
 		self.rotation = right_vec.angle_to(self.vector)
 		self.screen = screen
 		
-		image = pygame.transform.scale(image, (32,8))
+		image = pygame.transform.scale(image, (24,6))
 		self.model = pygame.transform.rotate(image, -self.rotation)
 		screen.blit(self.model, cos)
 		
