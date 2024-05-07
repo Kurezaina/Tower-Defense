@@ -19,7 +19,14 @@ pygame.display.set_caption("Tower Défense")
 scale_factor = 0
 
 
-
+class Fleche():
+	def __init__(self):
+		self.target = 0
+		self.cos = ()
+		
+	def update_mouvement(self):
+		pass
+		
 		
 class Tour():
 	def __init__(self):
@@ -210,10 +217,12 @@ class MainGame():
 									
 	def init_chemins(self):
 		# Initialise les graphes des chemins
-		self.graphe_chemin_1 = Graph_node(cos=(25,57))
+		self.graphe_chemin_1 = Graph_node(cos=(27,70))
+		
+		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(26,58)))
 		self.graphe_chemin_2 = Graph_node(cos=(39,61))
 		
-		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(39,57)))
+		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,57)))
 		
 		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,46)), 1)
 		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,57)), 0.25)
@@ -321,10 +330,12 @@ class MainGame():
 		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, trail = pygame.USEREVENT+1, 400, []		
 		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []								
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 900, []								
 								
 
 		pygame.time.set_timer(move_event, t)
 		pygame.time.set_timer(tour_event, t2)
+		pygame.time.set_timer(minion_spawn_roll_event, t2)
 		
 		while self.running:
 			
@@ -339,7 +350,13 @@ class MainGame():
 				elif event.type == tour_event:
 					self.attaques_tours()				
 					
-
+				elif event.type == minion_spawn_roll_event:
+					if random.random() < 0.5:
+						minion = Minion()
+						minion.board = self.board
+						minion.spawn(self.graphe_chemin_1, self.board)		
+						self.minions.append(minion)				
+					
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
 				self.y_off -= 48 if self.y_off > -w*1.5 + h else 0
@@ -362,7 +379,7 @@ class MainGame():
 			self.screen.blit(surface, (self.x_off,self.y_off))
 
 			for i in self.minions:
-				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 116/2 , i.cos_pixel[1] + self.y_off))
+				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 100/2 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
 								
