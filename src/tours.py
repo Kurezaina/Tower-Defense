@@ -1,6 +1,7 @@
 import pygame
 from math import dist, degrees, atan2, radians
 import math
+import common
 
 
 class Fleche():
@@ -42,7 +43,7 @@ class Tour():
 		
 	
 	def spawn(self, board):
-		board[self.center_tile[0]][self.center_tile[1]] = self.id
+		board[self.center_tile[1]][self.center_tile[0]] = self.id
 		w, h = pygame.display.get_surface().get_size()
 		
 		self.cos_pixel = ((self.center_tile[0]-1)*(w*1.6/100), (self.center_tile[1]-1)*(w*1.6/100))
@@ -54,3 +55,19 @@ class Tour():
 				return ret
 			
 		return ret
+		
+	def check_placable(self, board):
+		""""
+		Vérifie si la tour est plaçable sur la matrice en fonction de ses coordonnées
+		@param board: la matrice
+		return: True ou False
+		"""
+		
+		for c in range(3):
+			for r in range(3):
+				if board[self.center_tile[1]-1+c][self.center_tile[0]-1+r] != common.TILE_PLACEMENT:
+					return False
+		
+		return True 
+						
+		

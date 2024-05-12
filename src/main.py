@@ -22,7 +22,9 @@ from ennemi import Vague, Minion
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
 pygame.display.set_caption("Tower Défense")
-scale_factor = 0
+
+def pixels_to_tile(pixels):
+	return int(pixels/common.scale_factor)
 
 
 class MainGame():
@@ -190,6 +192,7 @@ class MainGame():
 		w, h = pygame.display.get_surface().get_size() 			
 		surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		for layer in self.map.visible_layers:
+			# if layer.name == "Main": Décommenter quand j'aurai implémenté l'interface pour les tours.
 			
 			for x, y, img in layer.tiles():
 				if img:
@@ -224,18 +227,11 @@ class MainGame():
 		
 		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
 		for layer in self.map.visible_layers:
-			if layer.name == "Chemin":
+			if layer.name == "placement":
 				for x, y, gid in layer.tiles():
-					x = mapclass.tiled_cords_to_pixels(x)
-					y = mapclass.tiled_cords_to_pixels(y)
 					
-					self.board[x][y] = 1
-			elif layer.name == "Points":
-				for x, y, gid in layer.tiles():
-					x = mapclass.tiled_cords_to_pixels(x)
-					y = mapclass.tiled_cords_to_pixels(y)
+					self.board[y][x] = common.TILE_PLACEMENT
 					
-					self.board[x][y] = 2					
 		
 		
 				
@@ -303,14 +299,15 @@ class MainGame():
 					self.update_counters()
 					
 					
-				elif event.type == pygame.MOUSEBUTTONUP:
+				elif event.type == pygame.MOUSEBUTTONUP: 
 					cos = pygame.mouse.get_pos()
 					# On transforme les coordonnées en pixel en coordonnées en tuiles.
 					
-					cos_tile = (int((cos[0] - self.x_off)//common.scale_factor), int((cos[1] - self.y_off)//common.scale_factor))
-					if self.gold >= 500:
-						tour = Tour()
-						tour.center_tile = cos_tile
+					cos_tile = (pixels_to_tile(cos[0] - self.x_off), pixels_to_tile(cos[1] - self.y_off))
+					tour = Tour()
+					tour.center_tile = cos_tile					
+					if self.gold >= 500 and tour.check_placable(self.board):
+
 						tour.spawn(self.board)
 						
 						self.tours.append(tour)

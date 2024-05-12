@@ -22,7 +22,7 @@ class Minion():
         self.cos = node.cos
         self.node = node.aller_prochain()
 
-        board[self.cos[0]][self.cos[1]] = self
+        board[self.cos[1]][self.cos[0]] = self
         self.update_cos_pixel()
 
     def update_cos_pixel(self):
@@ -37,7 +37,7 @@ class Minion():
     def mouvement_board(self):
         # On retire le minion de la position ou il était preccedemment
 
-        self.board[self.cos[0]][self.cos[1]] = 0
+        self.board[self.cos[1]][self.cos[0]] = 0
         diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
         mouvement = (0, 0)
         if diff[1] > 0:
