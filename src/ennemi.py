@@ -1,5 +1,6 @@
 import pygame
 import common
+from itertools import cycle
 
 class Minion():
     def __init__(self):
@@ -7,11 +8,18 @@ class Minion():
         self.hp = 1000
         self.minion_type = None
         self.node = None
-
+        
+        # Un dictionnaire contenant la liste des frames de l'animation de l'ennemi pour chaque direction
+        self.animations = {}
+        self.direction = "Top"
+        self.image = 0
+        self.frame = 0
+		
         self.cos = (0, 0)
         self.cos_pixel = (0, 0)
         self.board = None
         self.current_vague = 1
+        
 
     def check_hp(self):
         if self.hp <= 0:
@@ -40,19 +48,43 @@ class Minion():
         self.board[self.cos[1]][self.cos[0]] = 0
         diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
         mouvement = (0, 0)
+        prev_direction = self.direction
+        
+        # Mouvement vers le bas 
         if diff[1] > 0:
             mouvement = (0, 1)
+            self.direction = "Bottom"
+            
+        # Mouvement vers le haut
         elif diff[1] < 0:
             mouvement = (0, -1)
+            self.directionn = "Top"
+        # Mouvement droite
         elif diff[0] > 0:
             mouvement = (1, 0)
+            self.direction = "Right"
+        # Mouvement gauche
         elif diff[0] < 0:
             mouvement = (-1, 0)
+            self.direction = "Left"
+            
+        if self.direction != prev_direction:
+             self.frame = 0
 
         nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
         self.cos = nouv_cos
         self.update_cos_pixel()
         self.update_chemin()
+        
+    def update_animation(self):
+        if self.frame >= len(self.animations[self.direction]) - 1:
+            self.frame = 0
+            
+        next_frame = self.animations[self.direction][self.frame]
+        self.image = next_frame
+		
+        self.frame += 1
+		
 
     def mouvement_pixel(self):
         # TODO, NE FONCTIONNE PAS!

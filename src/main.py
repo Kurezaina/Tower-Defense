@@ -32,7 +32,6 @@ class MainGame():
 
 
 		self.current_scale = 1
-		
 		self.board = []
 		# Graphes chemins
 		self.graphe_chemin_1 = None
@@ -40,7 +39,6 @@ class MainGame():
 		
 		for i in range(200):
 			self.board.append([0]*200)
-
 		self.minion = Minion()
 		self.vague = Vague()
 
@@ -102,16 +100,38 @@ class MainGame():
 		self.tours = []
 		self.fleches = []
 		self.init_chemins()
-		minion = Minion()
-		minion.board = self.board
-		minion.spawn(self.graphe_chemin_1, self.board)
+
 		tour = Tour()
 		tour.center_tile = (35,55)
 		tour.spawn(self.board)
 		
 		self.tours.append(tour)
-		self.minions.append(minion)
+		# Animations
+		self.animations = self.load_animations()
+		self.minion.animations = self.animations
 		
+	def load_animations(self):
+		animations = {}
+		# Animations des ennemis
+		for i in os.listdir(os.path.join(dossier, "../Graphismes/Ennemis")):
+			# Différents types d'ennemis
+			fichier = os.path.join(dossier, "../Graphismes/Ennemis", i)
+			if os.path.isdir(fichier):
+				animations[i] = {}
+			# Différentes directions
+			for x in os.listdir(fichier):
+				direction = os.path.join(fichier, x)
+				if os.path.isdir(direction):
+					animations[i][x] = []
+					# Différentes frames
+					for f in os.listdir(direction):
+						frame = os.path.join(direction, f)
+						if os.path.isfile(frame):
+							# On créé une image pygame et on la scale
+							image = pygame.image.load(frame)
+							image = pygame.transform.scale(image, (80,80))
+							animations[i][x].append(image)
+		return animations
 	def update_all_mvmt(self):
 		for i in self.minions:
 			i.mouvement_board()
@@ -220,6 +240,7 @@ class MainGame():
 			print(spawn)
 			for _ in range(spawn[1]):
 				minion = Minion()
+				minion.animations = self.animations["Squelette"]				
 				minion.board = self.board
 				minion.spawn(self.graphe_chemin_1, self.board)
 				self.spawn_stack.append(minion)
@@ -237,8 +258,8 @@ class MainGame():
 				
 		self.bottom_camera_move = pygame.Rect(0,h-100, w, 100)
 		self.top_camera_move = pygame.Rect(0,-50, w, 100)
-		self.right_camera_move = pygame.Rect(w-50,0, 100, h)
-		self.left_camera_move = pygame.Rect(-50, 0, 100, h)
+		self.right_camera_move = pygame.Rect(w-50,0, 75, h)
+		self.left_camera_move = pygame.Rect(-50, 0, 75, h)
 						
 		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
 						
@@ -287,6 +308,7 @@ class MainGame():
 				elif event.type == minion_spawn_roll_event:
 					if random.random() < 0.5:
 						minion = Minion()
+						minion.animations = self.animations["Squelette"]
 						minion.board = self.board
 						self.minions.append(minion)	
 						if random.random() < 0.5:
@@ -344,7 +366,8 @@ class MainGame():
 			self.screen.blit(surface, (self.x_off,self.y_off))
 
 			for i in self.minions:
-				self.screen.blit(self.minion_img, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
+				i.update_animation()
+				self.screen.blit(i.image, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
 			for i in self.fleches:
