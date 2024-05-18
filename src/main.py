@@ -124,13 +124,15 @@ class MainGame():
 				if os.path.isdir(direction):
 					animations[i][x] = []
 					# Différentes frames
-					for f in os.listdir(direction):
+					d = os.listdir(direction)
+					for f in d:
 						frame = os.path.join(direction, f)
 						if os.path.isfile(frame):
 							# On créé une image pygame et on la scale
 							image = pygame.image.load(frame)
 							image = pygame.transform.scale(image, (80,80))
-							animations[i][x].append(image)
+							animations[i][x] += [image]*(30//(len(d)))
+
 		return animations
 	def update_all_mvmt(self):
 		for i in self.minions:
@@ -339,7 +341,7 @@ class MainGame():
 					print(cos_tile)
 					
 				elif event.type == curr_wave_spawn_event:
-					if len(self.spawn_stack) > 0:
+					if len(self.spawn_stack) > 99999:
 						self.minions.append(self.spawn_stack[0])
 						self.spawn_stack.pop(0)					
 
@@ -367,6 +369,7 @@ class MainGame():
 
 			for i in self.minions:
 				i.update_animation()
+				print(i.direction)
 				self.screen.blit(i.image, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))

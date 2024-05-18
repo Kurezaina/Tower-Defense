@@ -58,7 +58,7 @@ class Minion():
         # Mouvement vers le haut
         elif diff[1] < 0:
             mouvement = (0, -1)
-            self.directionn = "Top"
+            self.direction = "Top"
         # Mouvement droite
         elif diff[0] > 0:
             mouvement = (1, 0)
