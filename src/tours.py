@@ -14,7 +14,6 @@ class Fleche():
 		self.rotation = right_vec.angle_to(self.vector)
 		self.screen = screen
 		
-		image = pygame.transform.scale(image, (24,6))
 		self.model = pygame.transform.rotate(image, -self.rotation)
 		screen.blit(self.model, cos)
 		
@@ -35,7 +34,7 @@ class Tour():
 	def __init__(self):
 		self.center_tile = ()
 		self.cos_pixel = ()
-		self.rayon_atk = 5
+		self.rayon_atk = 10
 		self.hp = 1000
 		self.damage = 200
 		self.id = 20
