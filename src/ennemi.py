@@ -1,6 +1,6 @@
 import pygame
+import random
 import common
-from itertools import cycle
 
 class Minion():
     def __init__(self):
@@ -8,6 +8,9 @@ class Minion():
         self.hp = 1000
         self.minion_type = None
         self.node = None
+        
+        # La tile vers laquelle l'ennemi se dirige.
+        self.target = None
         
         # Un dictionnaire contenant la liste des frames de l'animation de l'ennemi pour chaque direction
         self.animations = {}
@@ -29,7 +32,7 @@ class Minion():
     def spawn(self, node, board):
         self.cos = node.cos
         self.node = node.aller_prochain()
-
+        self.target = self.node.cos
         board[self.cos[1]][self.cos[0]] = self
         self.update_cos_pixel()
 
@@ -39,14 +42,16 @@ class Minion():
         self.cos_pixel = (self.cos[0] * (w * 1.6 / 100), self.cos[1] * (w * 1.6 / 100))
 
     def update_chemin(self):
-        if self.cos == self.node.cos:
+        if self.cos == self.target:
             self.node = self.node.aller_prochain()
-
+            # On randomise la destination du minion pour qu'ils ne soient pas tous en ligne droite
+            self.target = (self.node.cos[0] + random.randint(-1,1), self.node.cos[1] + random.randint(-1,1))
+			
     def mouvement_board(self):
         # On retire le minion de la position ou il était preccedemment
 
         self.board[self.cos[1]][self.cos[0]] = 0
-        diff = (self.node.cos[0] - self.cos[0], self.node.cos[1] - self.cos[1])
+        diff = (self.target[0] - self.cos[0], self.target[1] - self.cos[1])
         mouvement = (0, 0)
         prev_direction = self.direction
         
@@ -105,21 +110,34 @@ class Minion():
             mouvement = (scale_factor, 0)
 
         nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
-        print(nouv_cos)
         self.cos_pixel = nouv_cos
 
         if nouv_cos[0] % (w * 0.016) == 0 or nouv_cos[1] % (w * 0.016) == 0:
             self.mouvement_board()
 
         self.update_chemin()
-
+        
+# + rapide, moins de PV
+class Gobelin(Minion):
+	def __init__(self):
+		super(Gobelin, self).__init__()
+		self.hp = 600
+	def __str__(self):
+		return "Gobelin"
+		
+# Ennemi générique avec des stats de base
+class Squelette(Minion):
+	def __init__(self):
+		super(Squelette, self).__init__()
+	def __str__(self):
+		return "Squelette"
 
 # Vague 1 : 15 squelettes et 15 gobelins
 
 class Vague():
     def __init__(self):
         self.vague_dico = {
-            "vague1" : [("squelettes", 15), ("gobelins", 15)]
+            "vague1" : [(Squelette, 15), (Gobelin, 0)]
 
         }
 
