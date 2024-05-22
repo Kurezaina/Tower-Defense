@@ -3,6 +3,7 @@
 import pygame
 import os
 from math import sqrt, dist, floor
+import operator
 
 import pygame_gui as pgu
 import itertools as it
@@ -18,6 +19,7 @@ from pygame_gui.core import ObjectID
 from gmap import *
 from graphe import *
 from ennemi import Vague, Minion
+from bouton import *
 
 dossier = os.path.dirname(os.path.realpath(__file__))
 Game = 0
@@ -30,6 +32,11 @@ def pixels_to_tile(pixels):
 class MainGame():
 	def __init__(self):
 
+		# Une liste des boutons pour tous les check quand on clique
+		self.boutons = []
+		
+		# Type de tour actuellement sélectionné pour être placé
+		self.tower_to_place = None
 
 		self.current_scale = 1
 		self.board = []
@@ -141,7 +148,7 @@ class MainGame():
 									
 	def init_chemins(self):
 		# Initialise les graphes des chemins
-		self.graphe_chemin_1 = Graph_node(cos=(27,70))
+		self.graphe_chemin_1 = Graph_node(cos=(27,87))
 		
 		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(27,58)))
 		self.graphe_chemin_2 = Graph_node(cos=(39,61))
@@ -165,7 +172,7 @@ class MainGame():
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
 		# Chemin sud-centre
-		self.graphe_chemin_3 = Graph_node(cos=(63,73))
+		self.graphe_chemin_3 = Graph_node(cos=(87,73))
 		ch3 = self.graphe_chemin_3.ajout_sortie(Graph_node(cos=(39,73)))
 		ch3 = ch3.ajout_sortie(Graph_node(cos=(39, 58)))
 		
@@ -208,18 +215,28 @@ class MainGame():
 		
 		
 		
+		
 	def loop(self):
 
 		# On charge la map
-		w, h = pygame.display.get_surface().get_size() 			
+		w, h = pygame.display.get_surface().get_size() 		
+		# On créé une surface vierge et une surface avec les tiles ou on peut placer des tours en vert	
 		surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
+		surface_placement = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		for layer in self.map.visible_layers:
-			# if layer.name == "Main": Décommenter quand j'aurai implémenté l'interface pour les tours.
-			
-			for x, y, img in layer.tiles():
-				if img:
-					surface.blit(img, (x * self.map.tilewidth,
-										   y * self.map.tileheight ))
+
+			if layer.name == "Main":
+				for x, y, img in layer.tiles():
+					if img:
+						surface.blit(img, (x * self.map.tilewidth,
+											   y * self.map.tileheight ))
+						surface_placement.blit(img, (x * self.map.tilewidth,
+											   y * self.map.tileheight ))										   
+			elif layer.name == "placement":
+				for x, y, img in layer.tiles():
+					if img:
+						surface_placement.blit(img, (x * self.map.tilewidth,
+											   y * self.map.tileheight ))				
 
 		
 		grid_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
@@ -235,32 +252,34 @@ class MainGame():
 			cordy += 32
 			
 		surface.blit(grid_surface, (0,0))
+		surface_placement.blit(grid_surface, (0,0))
+		
 		surface = pygame.transform.smoothscale(surface, (w*1.6, w*1.6))
+		surface_placement = pygame.transform.smoothscale(surface_placement, (w*1.6, w*1.6))
 
 		self.ennemies_in_vague = self.vague.vague_dico["vague" + str(self.minion.current_vague)]
-		for _, spawn in enumerate(self.ennemies_in_vague):
+		for ennemi, spawn in self.ennemies_in_vague:
 			print(spawn)
-			for _ in range(spawn[1]):
-				minion = Minion()
-				minion.animations = self.animations["Squelette"]				
+			for _ in range(spawn):
+				minion = ennemi()
+				minion.animations = self.animations[str(ennemi())]				
 				minion.board = self.board
 				minion.spawn(self.graphe_chemin_1, self.board)
 				self.spawn_stack.append(minion)
 
-		
-		# On remplit le plateau avec les tiles qui seront traversable par les troupes ennemies.
+
+		# On remplit le plateau avec les tiles sur lesquelles on pourra placer des tours.
 		for layer in self.map.visible_layers:
 			if layer.name == "placement":
 				for x, y, gid in layer.tiles():
 					
 					self.board[y][x] = common.TILE_PLACEMENT
 					
-		
-		
+				
 				
 		self.bottom_camera_move = pygame.Rect(0,h-100, w, 100)
 		self.top_camera_move = pygame.Rect(0,-50, w, 100)
-		self.right_camera_move = pygame.Rect(w-50,0, 75, h)
+		self.right_camera_move = pygame.Rect(w-25,0, 75, h)
 		self.left_camera_move = pygame.Rect(-50, 0, 75, h)
 						
 		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
@@ -280,12 +299,15 @@ class MainGame():
 		
 		# Event pour le spawn des ennemis toutes les 900ms						
 		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 2000, []								
-								
+			
+		# Event pour le spawn des gobelins toutes les 900ms						
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 2000, []		
+										
 		# Event pour le gain d'or toutes les secondes ms
 		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
 
 		# Event pour le spawn d'un mob de la vague actuelle
-		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 150, []								
+		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 300, []								
 
 		pygame.time.set_timer(move_event, t)
 		pygame.time.set_timer(tour_event, t2)
@@ -294,6 +316,9 @@ class MainGame():
 		pygame.time.set_timer(curr_wave_spawn_event, t5)
 		
 		
+		""" Les boutons """
+		self.archer_btn = Tour_build_selection_bouton(w-100,100,100,100)
+		self.boutons.append(self.archer_btn)
 		while self.running:
 			
 			dt = self.clock.tick(30)/1000	
@@ -325,24 +350,36 @@ class MainGame():
 					
 				elif event.type == pygame.MOUSEBUTTONUP: 
 					cos = pygame.mouse.get_pos()
+					# On check si un bouton est cliqué
+					for i in self.boutons:
+						if i.rectangle.collidepoint(cos):
+							i.click(self)
+					
 					# On transforme les coordonnées en pixel en coordonnées en tuiles.
 					
 					cos_tile = (pixels_to_tile(cos[0] - self.x_off), pixels_to_tile(cos[1] - self.y_off))
-					tour = Tour()
-					tour.center_tile = cos_tile					
-					if self.gold >= 500 and tour.check_placable(self.board):
+					if self.tower_to_place:
+						tour = self.tower_to_place()
+						tour.center_tile = cos_tile					
+						if self.gold >= 500 and tour.check_placable(self.board):
+							tour.spawn(self.board)
+							
+							self.tours.append(tour)
+							self.gold -= 500
+							self.update_counters()
 
-						tour.spawn(self.board)
-						
-						self.tours.append(tour)
-						self.gold -= 500
-						self.update_counters()
-
-					print(cos_tile)
+						print(cos_tile)
 					
 				elif event.type == curr_wave_spawn_event:
-					if len(self.spawn_stack) > 99999:
+					tile_difference = random.choice([-1,0])
+					if len(self.spawn_stack) > 0:
+						
 						self.minions.append(self.spawn_stack[0])
+						randomized = self.minions[-1].cos
+						# On ajoute une tile de plus ou de moins de différence aléatoirement
+						# Entre chaque spawn pour qu'ils n'apparaîssent pas en ligne droite
+						randomized = (randomized[0] + tile_difference, randomized[1])
+						self.minions[-1].cos = randomized
 						self.spawn_stack.pop(0)					
 
 
@@ -364,12 +401,14 @@ class MainGame():
 
 
 
-
-			self.screen.blit(surface, (self.x_off,self.y_off))
+			if self.tower_to_place:
+				self.screen.blit(surface_placement, (self.x_off,self.y_off))
+			else:
+				self.screen.blit(surface, (self.x_off,self.y_off))
+				
 
 			for i in self.minions:
 				i.update_animation()
-				print(i.direction)
 				self.screen.blit(i.image, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
 				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
@@ -384,6 +423,8 @@ class MainGame():
 			self.uimanager.update(dt)	
 												
 			self.uimanager.draw_ui(self.screen)
+
+			pygame.draw.rect(self.screen, (0,0,255), self.archer_btn.rectangle)
 
 			pygame.display.flip()
 			
