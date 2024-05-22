@@ -114,6 +114,7 @@ class MainGame():
 		
 		self.tours.append(tour)
 		# Animations
+		
 		self.animations = self.load_animations()
 		self.minion.animations = self.animations
 		
@@ -146,7 +147,7 @@ class MainGame():
 		self.tour_img = pygame.transform.scale(self.tour_img, (3*common.scale_factor, 3*common.scale_factor))
 		self.arrow_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/fleche.png"))
 		self.arrow_img = pygame.transform.scale(self.arrow_img, (24,6))
-									
+		self.hammer_img =  pygame.image.load(os.path.join(dossier, "../Graphismes/hammer.png"))
 
 		return animations
 	def update_all_mvmt(self):
@@ -172,10 +173,10 @@ class MainGame():
 		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,46)),0.75)
 		nv = nv.ajout_sortie(Graph_node(cos=(23,18)))
 		nv = nv.ajout_sortie(Graph_node(cos=(50,18)))
-		millieu_3 = nv.ajout_sortie(Graph_node(cos=(49,10)))
+		millieu_3 = nv.ajout_sortie(Graph_node(cos=(50,10)))
 		
 		# Chemin du millieu
-		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(48,46)), 0.25)
+		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(50,46)), 0.25)
 		millieu_2.ajout_sortie(millieu_3)
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
@@ -227,7 +228,7 @@ class MainGame():
 	def loop(self):
 
 		# On charge la map
-		w, h = pygame.display.get_surface().get_size() 		
+		w, h = pygame.display.get_surface().get_size()		
 		# On créé une surface vierge et une surface avec les tiles ou on peut placer des tours en vert	
 		surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		surface_placement = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
@@ -319,7 +320,7 @@ class MainGame():
 		
 		
 		""" Les boutons """
-		self.archer_btn = Tour_build_selection_bouton(w-100,100,100,100)
+		self.archer_btn = Tour_build_selection_bouton(w-100,100,100,100, color=(255,215,0), sprite=self.hammer_img)
 		self.boutons.append(self.archer_btn)
 		while self.running:
 			
@@ -420,13 +421,15 @@ class MainGame():
 					self.fleches.remove(i)
 				self.screen.blit(i.model, (i.cos[0] + self.x_off, i.cos[1] + self.y_off))
 					
-			w, h = pygame.display.get_surface().get_size()			
+			w, h = pygame.display.get_surface().get_size()
 
-			self.uimanager.update(dt)	
+			self.uimanager.update(dt)
 												
 			self.uimanager.draw_ui(self.screen)
-
-			pygame.draw.rect(self.screen, (0,0,255), self.archer_btn.rectangle)
+			for btn in self.boutons:
+				btn.render(self.screen)
+				
+				
 
 			pygame.display.flip()
 			

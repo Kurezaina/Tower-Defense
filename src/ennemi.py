@@ -3,120 +3,135 @@ import random
 import common
 
 class Minion():
-    def __init__(self):
-        self.tile = ()
-        self.hp = 1000
-        self.minion_type = None
-        self.node = None
-        
-        # La tile vers laquelle l'ennemi se dirige.
-        self.target = None
-        
-        # Un dictionnaire contenant la liste des frames de l'animation de l'ennemi pour chaque direction
-        self.animations = {}
-        self.direction = "Top"
-        self.image = 0
-        self.frame = 0
+	def __init__(self):
+		"""Classe générique pour tous les ennemis"""
+		self.tile = ()
+		self.hp = 1000
+		self.minion_type = None
+		self.node = None
 		
-        self.cos = (0, 0)
-        self.cos_pixel = (0, 0)
-        self.board = None
-        self.current_vague = 1
-        
+		# La tile vers laquelle l'ennemi se dirige.
+		self.target = None
+		
+		# Un dictionnaire contenant la liste des frames de l'animation de l'ennemi pour chaque direction
+		self.animations = {}
+		self.direction = "Top"
+		self.image = 0
+		self.frame = 0
+		
+		self.cos = (0, 0)
+		self.cos_pixel = (0, 0)
+		self.board = None
+		self.current_vague = 1
+		
 
-    def check_hp(self):
-        if self.hp <= 0:
-            return False
-        return True
+	def check_hp(self):
+		""" Vérifie si l'ennemi est toujours vivant
+return: True ou False"""
+		
+		if self.hp <= 0:
+			return False
+		return True
 
-    def spawn(self, node, board):
-        self.cos = node.cos
-        self.node = node.aller_prochain()
-        self.target = self.node.cos
-        board[self.cos[1]][self.cos[0]] = self
-        self.update_cos_pixel()
+	def spawn(self, node, board):
+		""" Fait apparaitre l'ennemi sur la matrice du jeu et initialise son chemin
+		@param node: la node du chemin où l'ennemi va spawn
+		@board: la matrice du jeu
+		"""
+		self.cos = node.cos
+		self.node = node.aller_prochain()
+		self.target = self.node.cos
+		board[self.cos[1]][self.cos[0]] = self
+		self.update_cos_pixel()
 
-    def update_cos_pixel(self):
-        w, h = pygame.display.get_surface().get_size()
+	def update_cos_pixel(self):
+		w, h = pygame.display.get_surface().get_size()
 
-        self.cos_pixel = (self.cos[0] * (w * 1.6 / 100), self.cos[1] * (w * 1.6 / 100))
+		self.cos_pixel = (self.cos[0] * (w * 1.6 / 100), self.cos[1] * (w * 1.6 / 100))
 
-    def update_chemin(self):
-        if self.cos == self.target:
-            self.node = self.node.aller_prochain()
-            # On randomise la destination du minion pour qu'ils ne soient pas tous en ligne droite
-            self.target = (self.node.cos[0] + random.randint(-1,1), self.node.cos[1] + random.randint(-1,1))
+	def update_chemin(self):
+		"""Met à jour le chemin de l'ennemi
+		En le faisant se diriger vers la prochaine node du graphe"""
+		
+		if self.cos == self.target:
+			self.node = self.node.aller_prochain()
+			# On randomise la destination du minion pour qu'ils ne soient pas tous en ligne droite
+			self.target = (self.node.cos[0] + random.randint(-1,1), self.node.cos[1] + random.randint(-1,1))
 			
-    def mouvement_board(self):
-        # On retire le minion de la position ou il était preccedemment
+	def mouvement_board(self):
+		""" Met a jour la position de l'ennemi sur la matrice du jeu
+		En faisant un pathfinding simple vers la node vers laquelle l'ennemi se dirige.
+		"""
+		# On retire le minion de la position ou il était preccedemment
 
-        self.board[self.cos[1]][self.cos[0]] = 0
-        diff = (self.target[0] - self.cos[0], self.target[1] - self.cos[1])
-        mouvement = (0, 0)
-        prev_direction = self.direction
-        
-        # Mouvement vers le bas 
-        if diff[1] > 0:
-            mouvement = (0, 1)
-            self.direction = "Bottom"
-            
-        # Mouvement vers le haut
-        elif diff[1] < 0:
-            mouvement = (0, -1)
-            self.direction = "Top"
-        # Mouvement droite
-        elif diff[0] > 0:
-            mouvement = (1, 0)
-            self.direction = "Right"
-        # Mouvement gauche
-        elif diff[0] < 0:
-            mouvement = (-1, 0)
-            self.direction = "Left"
-            
-        if self.direction != prev_direction:
-             self.frame = 0
-
-        nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
-        self.cos = nouv_cos
-        self.update_cos_pixel()
-        self.update_chemin()
-        
-    def update_animation(self):
-        if self.frame >= len(self.animations[self.direction]) - 1:
-            self.frame = 0
-            
-        next_frame = self.animations[self.direction][self.frame]
-        self.image = next_frame
+		self.board[self.cos[1]][self.cos[0]] = 0
+		diff = (self.target[0] - self.cos[0], self.target[1] - self.cos[1])
+		mouvement = (0, 0)
+		prev_direction = self.direction
 		
-        self.frame += 1
+		# Mouvement vers le bas 
+		if diff[1] > 0:
+			mouvement = (0, 1)
+			self.direction = "Bottom"
+			
+		# Mouvement vers le haut
+		elif diff[1] < 0:
+			mouvement = (0, -1)
+			self.direction = "Top"
+		# Mouvement droite
+		elif diff[0] > 0:
+			mouvement = (1, 0)
+			self.direction = "Right"
+		# Mouvement gauche
+		elif diff[0] < 0:
+			mouvement = (-1, 0)
+			self.direction = "Left"
+			
+		if self.direction != prev_direction:
+			 self.frame = 0
+
+		nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
+		self.cos = nouv_cos
+		self.update_cos_pixel()
+		self.update_chemin()
+		
+	def update_animation(self):
+		"""Passe à la prochaine frame de l'animation de l'ennemi"""
+		if self.frame >= len(self.animations[self.direction]) - 1:
+			self.frame = 0
+			
+		next_frame = self.animations[self.direction][self.frame]
+		self.image = next_frame
+		
+		self.frame += 1
 		
 
-    def mouvement_pixel(self):
-        # TODO, NE FONCTIONNE PAS!
+	def mouvement_pixel(self):
+		# TODO, NE FONCTIONNE PAS!
 
-        return
-        w, h = pygame.display.get_surface().get_size()
+		return
+		w, h = pygame.display.get_surface().get_size()
 
-        diff = (
-        self.node.cos[0] * (w * 1.6 / 100) - self.cos_pixel[0], self.node.cos[1] * (w * 1.6 / 100) - self.cos_pixel[1])
-        mouvement = (0, 0)
-        if diff[1] > 0:
-            mouvement = (0, scale_factor)
-        elif diff[1] < 0:
-            mouvement = (0, scale_factor)
-        elif diff[0] > 0:
-            mouvement = (scale_factor, 0)
-        elif diff[0] < 0:
-            mouvement = (scale_factor, 0)
+		diff = (
+		self.node.cos[0] * (w * 1.6 / 100) - self.cos_pixel[0], self.node.cos[1] * (w * 1.6 / 100) - self.cos_pixel[1])
+		mouvement = (0, 0)
+		if diff[1] > 0:
+			mouvement = (0, scale_factor)
+		elif diff[1] < 0:
+			mouvement = (0, scale_factor)
+		elif diff[0] > 0:
+			mouvement = (scale_factor, 0)
+		elif diff[0] < 0:
+			mouvement = (scale_factor, 0)
 
-        nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
-        self.cos_pixel = nouv_cos
+		nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
+		self.cos_pixel = nouv_cos
 
-        if nouv_cos[0] % (w * 0.016) == 0 or nouv_cos[1] % (w * 0.016) == 0:
-            self.mouvement_board()
+		if nouv_cos[0] % (w * 0.016) == 0 or nouv_cos[1] % (w * 0.016) == 0:
+			self.mouvement_board()
 
-        self.update_chemin()
-        
+		self.update_chemin()
+		
 # + rapide, moins de PV
 class Gobelin(Minion):
 	def __init__(self):
@@ -133,11 +148,9 @@ class Squelette(Minion):
 		return "Squelette"
 
 # Vague 1 : 15 squelettes et 15 gobelins
-
 class Vague():
-    def __init__(self):
-        self.vague_dico = {
-            "vague1" : [(Squelette, 15), (Gobelin, 0)]
+	def __init__(self):
+		self.vague_dico = {
+			"vague1" : [(Squelette, 15), (Gobelin, 0)]
 
-        }
-
+		}

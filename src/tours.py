@@ -19,11 +19,16 @@ class Fleche():
 		
 		
 	def update_mouvement(self):
+		""" Met à jour la position de la flèche pour l'approcher de l'ennemi ciblé"""
 		x = math.cos(radians(self.rotation))*16
 		y = math.sin(radians(self.rotation))*16
 		self.cos = (self.cos[0] + x, self.cos[1] + y)
-		self.check_done()
 	def check_done(self):
+		"""
+		Vérifie avec une équation de disque si la flèche a atteint sa destination
+		return True ou False
+		"""
+		
 		if dist(self.cos, self.premieres_cos_cible) < 10:
 			return True
 		return False
@@ -42,13 +47,25 @@ class Tour():
 		
 	
 	def spawn(self, board):
+		"""
+		Fait apparaitre la tour dans la matrice du jeu
+		@param board: la matrice
+		"""
+		
 		board[self.center_tile[1]][self.center_tile[0]] = self.id
 		w, h = pygame.display.get_surface().get_size()
 		
 		self.cos_pixel = ((self.center_tile[0]-1)*(w*1.6/100), (self.center_tile[1]-1)*(w*1.6/100))
 	def targetable_minions(self, minions):
+		"""
+		Calcule la distance entre les ennemis et la tour pour savoir si ils sont à portée d'attaque
+		@param minions: la liste d'ennemis
+		return la liste des ennemis à portée
+		"""
+		
 		ret = []
 		for i in minions:
+			# Équation de disque pour savoir si l'ennemi est à portée
 			if dist(i.cos, self.center_tile) <= self.rayon_atk:
 				ret.append(i)
 				return ret
