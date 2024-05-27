@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="Tuiles" tilewidth="32" tileheight="32" tilecount="5" columns="0">
+<tileset version="1.10" tiledversion="1.10.2" name="Tuiles" tilewidth="66" tileheight="77" tilecount="6" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image width="32" height="32" source="chemin.png"/>
@@ -15,5 +15,8 @@
  </tile>
  <tile id="4">
   <image width="32" height="32" source="emplacemement_faux.png"/>
+ </tile>
+ <tile id="5">
+  <image width="66" height="77" source="Tree1.png"/>
  </tile>
 </tileset>

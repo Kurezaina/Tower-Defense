@@ -3,9 +3,9 @@
  <image source="terrain.png" width="1024" height="1024"/>
  <tile id="0">
   <animation>
-   <frame tileid="187" duration="50"/>
-   <frame tileid="188" duration="50"/>
-   <frame tileid="189" duration="50"/>
+   <frame tileid="187" duration="200"/>
+   <frame tileid="188" duration="200"/>
+   <frame tileid="189" duration="200"/>
   </animation>
  </tile>
  <wangsets>
