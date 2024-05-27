@@ -322,7 +322,7 @@ class MainGame():
 		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
 		
 		# Event pour le spawn des ennemis toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 50, []								
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 75, []								
 			
 										
 		# Event pour le gain d'or toutes les secondes ms
@@ -344,8 +344,11 @@ class MainGame():
 		
 		
 		""" Les boutons """
-		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(255,215,0), sprite=self.tour_img)
-		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(10,27,94), sprite=self.mage_img)
+		archer_btn_icon = pygame.transform.scale(self.tour_img, (100,80))
+		sorcier_btn_icon = pygame.transform.scale(self.mage_img, (100,80))
+		
+		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(0,0,0), sprite=archer_btn_icon)
+		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(0,0,0), sprite=sorcier_btn_icon)
 		
 		self.boutons.append(self.archer_btn)
 		self.boutons.append(self.sorcier_btn)
@@ -472,6 +475,9 @@ class MainGame():
 						
 if __name__ == "__main__":
 	pygame.init()
+	pygame.font.init()
+	
+	common.font_dossier = os.path.join(dossier, "fonts/")
 	
 	screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 	pygame.display.toggle_fullscreen()
@@ -479,6 +485,7 @@ if __name__ == "__main__":
 	running = True
 
 	Game = MainGame()
+	common.game = Game
 	Game.screen = screen
 	Game.loop()
 	print("T'as perdu noob")
