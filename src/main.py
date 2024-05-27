@@ -154,7 +154,9 @@ class MainGame():
 		return animations
 	def update_all_mvmt(self):
 		for i in self.minions:
-			i.mouvement_board()
+			if not i.mouvement_board():
+				self.running = False
+				self.defeat = True
 		
 									
 	def init_chemins(self):
@@ -194,9 +196,7 @@ class MainGame():
 		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,20)))
 		ch4.ajout_sortie(nv)
 		
-		# Si un ennemi se trouve sur ces cos: défaite
-		self.cos_finale = (50,10)
-		
+
 
 		
 	def attaques_tours(self):
@@ -425,9 +425,6 @@ class MainGame():
 				
 
 			for i in self.minions:
-				if i.cos[1] == self.cos_finale[1]:
-					self.running = False
-					self.defeat = True
 					
 				i.update_animation()
 				self.screen.blit(i.image, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))

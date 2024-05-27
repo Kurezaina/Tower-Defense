@@ -53,10 +53,15 @@ return: True ou False"""
 		"""Met à jour le chemin de l'ennemi
 		En le faisant se diriger vers la prochaine node du graphe"""
 		
+
 		if self.cos == self.target:
+			# Défaite si l'ennemi est parvenu à la dernière tile, on retourne false.
+			if len(self.node.sorties) == 0:
+				return False		
 			self.node = self.node.aller_prochain()
 			# On randomise la destination du minion pour qu'ils ne soient pas tous en ligne droite
 			self.target = (self.node.cos[0] + random.randint(-1,1), self.node.cos[1] + random.randint(-1,1))
+		return True
 			
 	def mouvement_board(self):
 		""" Met a jour la position de l'ennemi sur la matrice du jeu
@@ -93,7 +98,8 @@ return: True ou False"""
 		nouv_cos = (self.cos[0] + mouvement[0], self.cos[1] + mouvement[1])
 		self.cos = nouv_cos
 		self.update_cos_pixel()
-		self.update_chemin()
+		
+		return self.update_chemin()
 		
 	def update_animation(self):
 		"""Passe à la prochaine frame de l'animation de l'ennemi"""

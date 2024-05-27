@@ -1,6 +1,6 @@
 import random
 
-# Un genre de mélange entre un graphe et une linked list
+# Un genre de mélange entre un graphe et une linked list qui modélise le chemin des ennemis
 
 class Graph_node():
 	def __init__(self, cos=None):
