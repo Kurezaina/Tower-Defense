@@ -13,7 +13,7 @@ class Button():
 		self.h = h
 		
 		self.rectangle = pygame.Rect(x,y,w,h)
-		self.sprite = pygame.transform.scale(sprite,(w,h)) if sprite else None
+		self.sprite = pygame.transform.scale(sprite,(w,h)) if sprite else None 
 		self.color = color
 		self.toggled = False
         
@@ -33,9 +33,9 @@ class Button():
 			screen.blit(self.sprite, (self.x, self.y))
 		
 
-class Tour_build_selection_bouton(Button):
-	def __init__(self,x,y,w,h, tower=Tour, color=None, sprite=None):
-		super(Tour_build_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=sprite)
+class Archer_build_selection_bouton(Button):
+	def __init__(self,x,y,w,h, tower=Archer, color=None, sprite=None):
+		super(Archer_build_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=sprite)
 		self.tower = tower
 		
 		
@@ -48,3 +48,18 @@ class Tour_build_selection_bouton(Button):
 			self.toggled = False
 
 		print("Selecting tower")
+
+class Sorcier_build_selection_bouton(Button):
+	def __init__(self,x,y,w,h, tower=Sorcier, color=None, sprite=None):
+		super(Sorcier_build_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=sprite)
+		self.tower = tower
+		
+		
+	def click(self, game):
+		if not self.toggled:
+			game.tower_to_place = self.tower
+			self.toggled = True
+		else:
+			game.tower_to_place = None
+			self.toggled = False
+

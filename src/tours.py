@@ -39,11 +39,13 @@ class Tour():
 	def __init__(self):
 		self.center_tile = ()
 		self.cos_pixel = ()
-		self.rayon_atk = 10
+		self.rayon_atk = 20
 		self.hp = 1000
-		self.damage = 200
+		self.damage = 125
 		self.id = 20
 		self.tower_type = None
+		self.sprite = None 
+		self.arrow_img = None
 		
 	
 	def spawn(self, board):
@@ -52,25 +54,30 @@ class Tour():
 		@param board: la matrice
 		"""
 		
-		board[self.center_tile[1]][self.center_tile[0]] = self.id
+		for c in range(3):
+			for r in range(3):
+				board[self.center_tile[1]-1+c][self.center_tile[0]-1+r] = self.id
+		
 		w, h = pygame.display.get_surface().get_size()
 		
 		self.cos_pixel = ((self.center_tile[0]-1)*(w*1.6/100), (self.center_tile[1]-1)*(w*1.6/100))
 	def targetable_minions(self, minions):
 		"""
-		Calcule la distance entre les ennemis et la tour pour savoir si ils sont à portée d'attaque
+		Calcule la distance entre les ennemis et la tour pour savoir si ils sont à portée d'attaque.
 		@param minions: la liste d'ennemis
-		return la liste des ennemis à portée
+		return l'ennemi à portée le plus proche de l'arrivée qui sera attaqué par la touraz
 		"""
-		
 		ret = []
 		for i in minions:
 			# Équation de disque pour savoir si l'ennemi est à portée
 			if dist(i.cos, self.center_tile) <= self.rayon_atk:
 				ret.append(i)
-				return ret
 			
-		return ret
+		if len(ret) > 0:
+			# La tour doit toujours attaquer l'ennemi le plus proche de l'arrivée.
+			return [min(ret, key=lambda x: dist(x.cos, (49,12)))]
+		else:
+			return []
 		
 	def check_placable(self, board):
 		""""
@@ -85,5 +92,60 @@ class Tour():
 					return False
 		
 		return True 
+		
+		
+	def attack(self, ennemi):
+		ennemi.hp -= self.damage
+		
+	
+class Archer(Tour):
+	def __init__(self, game):
+		super(Archer, self).__init__()
+		self.rayon_atk = 20
+		self.hp = 1000
+		self.damage = 125		
+		self.arrow_img = game.arrow_img
+		self.sprite = game.tour_img
+		self.cost = 500
+		
+
+		
+		
+class Sorcier(Tour):
+	def __init__(self, game):
+		super(Sorcier, self).__init__()
+		self.rayon_atk = 10
+		self.rayon_aoe = 2
+		self.hp = 1000
+		self.damage = 250
+		self.cost = 1250
+		self.arrow_img = game.fireball_img
+		self.sprite = game.mage_img
+		
+	def targetable_minions(self, minions):
+		"""
+		Calcule la distance entre les ennemis et la tour pour savoir si ils sont à portée d'attaque.
+		@param minions: la liste d'ennemis
+		Différent pour la tour de sorcier
+		"""
+		ret = []
+		for i in minions:
+			# Équation de disque pour savoir si l'ennemi est à portée
+			if dist(i.cos, self.center_tile) <= self.rayon_atk:
+				ret.append(i)
+			
+		if len(ret) > 0:
+			# La tour doit toujours attaquer l'ennemi le plus proche de l'arrivée.
+			center = min(ret, key=lambda x: dist(x.cos, (49,12)))
+			ennemi_cos = center.cos
+			ret = []
+			# On attaque aussi tous les ennemis proches de l'ennemi ciblé
+			for i in minions:
+				if dist(i.cos, ennemi_cos) <= self.rayon_aoe:
+					ret.append(i)	
+			return ret	
+		else:
+			return []	
+			
 						
 		

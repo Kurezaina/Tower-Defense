@@ -132,6 +132,11 @@ return: True ou False"""
 
 		self.update_chemin()
 		
+	def kill(self):
+		"""Retire l'unité de la matrice du jeu"""
+		
+		self.board[self.cos[1]][self.cos[0]] = 0
+		
 # + rapide, moins de PV
 class Gobelin(Minion):
 	def __init__(self):

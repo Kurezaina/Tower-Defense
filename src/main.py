@@ -31,7 +31,11 @@ def pixels_to_tile(pixels):
 
 class MainGame():
 	def __init__(self):
-
+		# 
+		self.defeat = False
+		# La chance qu'un mob apparaisse toutes les 50ms.
+		self.spawn_chance = 0.05
+		
 		# Une liste des boutons pour tous les check quand on clique
 		self.boutons = []
 		
@@ -84,7 +88,7 @@ class MainGame():
 
 		# OR
 		self.gold = 10
-		self.gold_income = 100
+		self.gold_income = 50
 		self.gold_squelette = 7
 		self.gold_gobelin = 5		
 		
@@ -108,16 +112,19 @@ class MainGame():
 		self.fleches = []
 		self.init_chemins()
 
-		tour = Tour()
+
+		# Animations
+		self.fireball_img = None
+		self.animations = self.load_animations()
+		self.minion.animations = self.animations
+		tour = Sorcier(self)
+		tour.sprite = self.mage_img
+		
 		tour.center_tile = (35,55)
 		tour.spawn(self.board)
 		
 		self.tours.append(tour)
-		# Animations
-		
-		self.animations = self.load_animations()
-		self.minion.animations = self.animations
-		
+				
 	def load_animations(self):
 		animations = {}
 		# Animations des ennemis
@@ -143,10 +150,19 @@ class MainGame():
 							
 
 		self.tour_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/0.png"))
+		self.mage_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Mage/mage.png"))
 
+		# Les tours doivent rentrer dans 3 cases
 		self.tour_img = pygame.transform.scale(self.tour_img, (3*common.scale_factor, 3*common.scale_factor))
+		self.mage_img = pygame.transform.scale(self.mage_img, (3*common.scale_factor, 3*common.scale_factor))
+		
+		
 		self.arrow_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Archers/fleche.png"))
 		self.arrow_img = pygame.transform.scale(self.arrow_img, (24,6))
+		
+		self.fireball_img = pygame.image.load(os.path.join(dossier, "../Graphismes/Tours/Mage/boule_de_feu.png"))
+		self.fireball_img = pygame.transform.scale(self.fireball_img, (24,6))
+		
 		self.hammer_img =  pygame.image.load(os.path.join(dossier, "../Graphismes/hammer.png"))
 
 		return animations
@@ -164,19 +180,20 @@ class MainGame():
 		
 		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,57)))
 		
-		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,46)), 1)
+		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,47)), 1)
 		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,57)), 0.25)
 		
 		self.graphe_chemin_2.ajout_sortie(ch1)
 		
 		# Chemin de gauche
-		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,46)),0.75)
+		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,47)),0.75)
 		nv = nv.ajout_sortie(Graph_node(cos=(23,18)))
 		nv = nv.ajout_sortie(Graph_node(cos=(50,18)))
 		millieu_3 = nv.ajout_sortie(Graph_node(cos=(50,10)))
 		
+		
 		# Chemin du millieu
-		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(50,46)), 0.25)
+		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(50,47)), 0.25)
 		millieu_2.ajout_sortie(millieu_3)
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
@@ -191,18 +208,22 @@ class MainGame():
 		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,20)))
 		ch4.ajout_sortie(nv)
 		
+		# Si un ennemi se trouve sur ces cos: défaite
+		self.cos_finale = (50,10)
+		
 
 		
 	def attaques_tours(self):
 		for t in self.tours:
 			for m in t.targetable_minions(self.minions):
-				fleche = Fleche(m, t.cos_pixel, self.arrow_img, self.screen)
+				fleche = Fleche(m, t.cos_pixel, t.arrow_img, self.screen)
 				self.fleches.append(fleche)
-				m.hp -= t.damage
+				t.attack(m)
 				print(m.hp)
 				if not m.check_hp():
 					self.gold += 7
 					self.minions.remove(m)
+					m.kill()
 
 	# Mettre à jour les compteurs (gold)
 	def update_counters(self):
@@ -234,7 +255,7 @@ class MainGame():
 		surface_placement = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1])).convert()
 		for layer in self.map.visible_layers:
 
-			if layer.name == "Main":
+			if layer.name == "Main" or layer.name == "terre_rouge"  or layer.name == "objet":
 				for x, y, img in layer.tiles():
 					if img:
 						surface.blit(img, (x * self.map.tilewidth,
@@ -301,27 +322,33 @@ class MainGame():
 		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
 		
 		# Event pour le spawn des ennemis toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 2000, []								
+		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 50, []								
 			
-		# Event pour le spawn des gobelins toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 2000, []		
 										
 		# Event pour le gain d'or toutes les secondes ms
 		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
 
 		# Event pour le spawn d'un mob de la vague actuelle
-		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 300, []								
-
+		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 300, []		
+								
+		# Event pour l'augmentation progressive de la difficulté.
+		difficulte_crescendo_event, t6, _ = pygame.USEREVENT+6, 5000, []	
+		
+		
 		pygame.time.set_timer(move_event, t)
 		pygame.time.set_timer(tour_event, t2)
 		pygame.time.set_timer(minion_spawn_roll_event, t3)
 		pygame.time.set_timer(gold_income_event, t4)
 		pygame.time.set_timer(curr_wave_spawn_event, t5)
+		pygame.time.set_timer(difficulte_crescendo_event,t6)
 		
 		
 		""" Les boutons """
-		self.archer_btn = Tour_build_selection_bouton(w-100,100,100,100, color=(255,215,0), sprite=self.hammer_img)
+		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(255,215,0), sprite=self.tour_img)
+		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(10,27,94), sprite=self.mage_img)
+		
 		self.boutons.append(self.archer_btn)
+		self.boutons.append(self.sorcier_btn)
 		while self.running:
 			
 			dt = self.clock.tick(30)/1000	
@@ -336,7 +363,7 @@ class MainGame():
 					self.attaques_tours()				
 					
 				elif event.type == minion_spawn_roll_event:
-					if random.random() < 0.5:
+					if random.random() < self.spawn_chance:
 						minion = Minion()
 						minion.animations = self.animations["Squelette"]
 						minion.board = self.board
@@ -362,13 +389,14 @@ class MainGame():
 					
 					cos_tile = (pixels_to_tile(cos[0] - self.x_off), pixels_to_tile(cos[1] - self.y_off))
 					if self.tower_to_place:
-						tour = self.tower_to_place()
+						# On créé un objet en fonction du type de tour (polymorphisme)
+						tour = self.tower_to_place(self)
 						tour.center_tile = cos_tile					
-						if self.gold >= 500 and tour.check_placable(self.board):
+						
+						if self.gold >= tour.cost and tour.check_placable(self.board):
 							tour.spawn(self.board)
-							
 							self.tours.append(tour)
-							self.gold -= 500
+							self.gold -= tour.cost
 							self.update_counters()
 
 						print(cos_tile)
@@ -383,7 +411,10 @@ class MainGame():
 						# Entre chaque spawn pour qu'ils n'apparaîssent pas en ligne droite
 						randomized = (randomized[0] + tile_difference, randomized[1])
 						self.minions[-1].cos = randomized
-						self.spawn_stack.pop(0)					
+						self.spawn_stack.pop(0)			
+						
+				elif event.type == difficulte_crescendo_event:
+					self.spawn_chance += 0.005
 
 
 			mouse_pos = pygame.mouse.get_pos()				
@@ -392,9 +423,9 @@ class MainGame():
 			if self.top_camera_move.collidepoint(mouse_pos):
 				self.y_off += 48 if self.y_off < 0 else 0
 			if self.right_camera_move.collidepoint(mouse_pos):
-				self.x_off -= 48 if self.x_off > -w*1.6 else 0
+				self.x_off -= 48 if self.x_off > -25*common.scale_factor else 0
 			if self.left_camera_move.collidepoint(mouse_pos):
-				self.x_off += 48 if self.x_off < 0 else 0
+				self.x_off += 48 if self.x_off < -48 else 0
 				
 				
 
@@ -411,10 +442,14 @@ class MainGame():
 				
 
 			for i in self.minions:
+				if i.cos[1] == self.cos_finale[1]:
+					self.running = False
+					self.defeat = True
+					
 				i.update_animation()
 				self.screen.blit(i.image, (i.cos_pixel[0] + self.x_off - 40 , i.cos_pixel[1] + self.y_off))
 			for i in self.tours:
-				self.screen.blit(self.tour_img, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
+				self.screen.blit(i.sprite, (i.cos_pixel[0] + self.x_off , i.cos_pixel[1] + self.y_off))
 			for i in self.fleches:
 				i.update_mouvement()
 				if i.check_done():
@@ -442,13 +477,13 @@ if __name__ == "__main__":
 	pygame.display.toggle_fullscreen()
 	
 	running = True
-	while running:
 
-		Game = MainGame()
-		Game.screen = screen
-		Game.loop()
-	
+	Game = MainGame()
+	Game.screen = screen
+	Game.loop()
+	print("T'as perdu noob")
 	pygame.quit()
+	
 	
 	
 	
