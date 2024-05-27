@@ -5,7 +5,6 @@ import os
 from math import sqrt, dist, floor
 import operator
 
-import pygame_gui as pgu
 import itertools as it
 # Pour les maps de tiled
 from pytmx import load_pygame
@@ -91,21 +90,8 @@ class MainGame():
 		self.gold_income = 50
 		self.gold_squelette = 7
 		self.gold_gobelin = 5		
-		
-		# UI
-		
-		self.uimanager = pgu.UIManager((w, h), os.path.join(dossier, "theme.json"))
-		self.gold_rect = pygame.Rect((0, 0), (80, 30))
-		self.gold_rect.topleft = (30, 10)
-		self.goldcounter = UITextBox(relative_rect=self.gold_rect, html_text=str(self.gold))
-		
-		"""
-	
-		self.test_rect = pygame.Rect((0, 0), (80, 30))
-		self.test_rect.topleft = (230, 10)
-		self.testcounter = UITextBox(relative_rect=self.test_rect, html_text=(str(self.mask_wear)))
-		"""
-	
+
+
 		self.spawn_stack = []
 		self.minions = []
 		self.tours = []
@@ -227,19 +213,13 @@ class MainGame():
 
 	# Mettre à jour les compteurs (gold)
 	def update_counters(self):
-		gold_colour = ""
-		if self.gold < 0:
-			# Rouge
-			gold_colour = "#FF0000"
-		else:
-			# Blanc
-			gold_colour = "#FFFFFF"
+		# Couleur du compteur d'or (blanc)
+		gold_colour =  (255,255,255)
 
-		rep_colour = ""
 		
-		html_gold = """<font color="{colour}">{value}</font>""".format(colour=gold_colour, value=str(self.gold))
-		
-		self.goldcounter.set_text(html_gold)
+		font = pygame.font.Font(os.path.join(common.font_dossier, "Montserrat-Regular.ttf"))
+		text = font.render(str(self.gold), True, gold_colour)
+		self.screen.blit(text, (20,10))
 		return
 		
 		
@@ -460,15 +440,11 @@ class MainGame():
 				self.screen.blit(i.model, (i.cos[0] + self.x_off, i.cos[1] + self.y_off))
 					
 			w, h = pygame.display.get_surface().get_size()
-
-			self.uimanager.update(dt)
-												
-			self.uimanager.draw_ui(self.screen)
 			for btn in self.boutons:
 				btn.render(self.screen)
 				
 				
-
+			self.update_counters()
 			pygame.display.flip()
 			
 			
