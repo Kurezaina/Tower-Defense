@@ -86,7 +86,7 @@ class MainGame():
 
 		# OR
 		self.gold = 500
-		self.gold_income = 50
+		self.gold_income = 25
 		self.gold_squelette = 7
 		self.gold_gobelin = 5		
 
@@ -203,7 +203,7 @@ class MainGame():
 				t.attack(m)
 				print(m.hp)
 				if not m.check_hp():
-					self.gold += 7
+					self.gold += 25
 					self.minions.remove(m)
 					m.kill()
 
