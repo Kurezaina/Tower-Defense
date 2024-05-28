@@ -89,7 +89,7 @@ class MainGame():
 
 
 		# OR
-		self.gold = 10
+		self.gold = 500
 		self.gold_income = 50
 		self.gold_squelette = 7
 		self.gold_gobelin = 5		
