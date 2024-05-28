@@ -33,9 +33,10 @@ class MainGame():
 		
 		self.begin_time = datetime.datetime.now()
 		self.survival_time = None
-		# 
+		
+		# Indique si une défaite a eu lieu
 		self.defeat = False
-		# La chance qu'un mob apparaisse toutes les 50ms.
+		# La chance qu'un mob apparaisse à chaque roll.
 		self.spawn_chance = 0.05
 		
 		# Une liste des boutons pour tous les check quand on clique
@@ -50,6 +51,7 @@ class MainGame():
 		self.graphe_chemin_1 = None
 		self.graphe_chemin_3 = None
 		
+		
 		for i in range(200):
 			self.board.append([0]*200)
 		self.minion = Minion()
@@ -61,12 +63,6 @@ class MainGame():
 		self.minion_img = 0
 		self.tour_img = 0
 		
-		# 1 = Ennemi, 0 = Joueur
-		self.current_turn = 1
-
-		#position sur la minimap
-		self.pos_x_minimap = 0
-		self.pos_y_minimap = 0
 		self.running = True
 		
 		# Une clock
@@ -75,7 +71,7 @@ class MainGame():
 		# Un pygame.screen
 		self.screen = 0
 		
-		# On place la cam au centre de la map
+		# GRAPHIQUE
 		w, h = pygame.display.get_surface().get_size()
 		common.scale_factor = w*1.6/100
 		
@@ -95,6 +91,7 @@ class MainGame():
 		self.gold_gobelin = 5		
 
 
+		# LISTES
 		self.spawn_stack = []
 		self.minions = []
 		self.tours = []
@@ -107,7 +104,7 @@ class MainGame():
 		self.animations = self.load_animations()
 		self.minion.animations = self.animations
 
-				
+	# Chargement des assets du jeu dans la RAM (GRAPHIQUE)
 	def load_animations(self):
 		animations = {}
 		# Animations des ennemis
@@ -149,6 +146,8 @@ class MainGame():
 		self.hammer_img =  pygame.image.load(os.path.join(dossier, "../Graphismes/hammer.png"))
 
 		return animations
+		
+	# Gère la mise à jour du mouvement des ennemis (TRAVAIL)
 	def update_all_mvmt(self):
 		for i in self.minions:
 			if not i.mouvement_board():
@@ -157,7 +156,7 @@ class MainGame():
 		
 									
 	def init_chemins(self):
-		# Initialise les graphes des chemins
+		# Initialise les graphes des chemins (TRAVAIL)
 		self.graphe_chemin_1 = Graph_node(cos=(25,87))
 		
 		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(25,58)))
@@ -195,7 +194,7 @@ class MainGame():
 		
 
 
-		
+	# Gère les attaques des tours et les dommages contre les mobs (TRAVAIL) #
 	def attaques_tours(self):
 		for t in self.tours:
 			for m in t.targetable_minions(self.minions):
@@ -208,7 +207,7 @@ class MainGame():
 					self.minions.remove(m)
 					m.kill()
 
-	# Mettre à jour les compteurs (gold)
+	# Mettre à jour les compteurs graphiques
 	def update_counters(self):
 		# Couleur du compteur d'or (blanc)
 		gold_colour =  (255,255,255)
@@ -225,6 +224,9 @@ class MainGame():
 		
 	def loop(self):
 
+		# Pre-Loop: Partie Graphique# 
+		
+		
 		# On charge la map
 		w, h = pygame.display.get_surface().get_size()		
 		# On créé une surface vierge et une surface avec les tiles ou on peut placer des tours en vert	
@@ -264,6 +266,34 @@ class MainGame():
 		surface = pygame.transform.smoothscale(surface, (w*1.6, w*1.6))
 		surface_placement = pygame.transform.smoothscale(surface_placement, (w*1.6, w*1.6))
 
+
+				
+				
+		self.bottom_camera_move = pygame.Rect(0,h-100, w, 100)
+		self.top_camera_move = pygame.Rect(0,-50, w, 100)
+		self.right_camera_move = pygame.Rect(w-25,0, 75, h)
+		self.left_camera_move = pygame.Rect(-50, 0, 75, h)
+						
+		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
+						
+						
+		""" Les boutons """
+		archer_btn_icon = pygame.transform.scale(self.tour_img, (100,80))
+		sorcier_btn_icon = pygame.transform.scale(self.mage_img, (100,80))
+		hammer_btn_icon = pygame.transform.scale(self.hammer_img, (100,100))
+		
+		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(0,0,0), sprite=archer_btn_icon)
+		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(0,0,0), sprite=sorcier_btn_icon)
+		
+		self.delete_btn = Delete_tour_button(w-100,400,100,100, color=(125,0,0), sprite=hammer_btn_icon)
+		
+		self.boutons.append(self.delete_btn)		
+		self.boutons.append(self.archer_btn)
+		self.boutons.append(self.sorcier_btn)
+								
+		# Pre-loop: Partie Travail # 
+		
+		
 		self.ennemies_in_vague = self.vague.vague_dico["vague" + str(self.minion.current_vague)]
 		for ennemi, spawn in self.ennemies_in_vague:
 			print(spawn)
@@ -282,16 +312,7 @@ class MainGame():
 				for x, y, gid in layer.tiles():
 					
 					self.board[y][x] = common.TILE_PLACEMENT
-					
-				
-				
-		self.bottom_camera_move = pygame.Rect(0,h-100, w, 100)
-		self.top_camera_move = pygame.Rect(0,-50, w, 100)
-		self.right_camera_move = pygame.Rect(w-25,0, 75, h)
-		self.left_camera_move = pygame.Rect(-50, 0, 75, h)
-						
-		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
-						
+							
 
 		# Toutes les 300ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
 		move_event, t, _ = pygame.USEREVENT+1, 300, []		
@@ -321,20 +342,11 @@ class MainGame():
 		pygame.time.set_timer(difficulte_crescendo_event,t6)
 		
 		
-		""" Les boutons """
-		archer_btn_icon = pygame.transform.scale(self.tour_img, (100,80))
-		sorcier_btn_icon = pygame.transform.scale(self.mage_img, (100,80))
-		hammer_btn_icon = pygame.transform.scale(self.hammer_img, (100,100))
+
 		
-		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(0,0,0), sprite=archer_btn_icon)
-		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(0,0,0), sprite=sorcier_btn_icon)
-		
-		self.delete_btn = Delete_tour_button(w-100,400,100,100, color=(125,0,0), sprite=hammer_btn_icon)
-		
-		self.boutons.append(self.delete_btn)		
-		self.boutons.append(self.archer_btn)
-		self.boutons.append(self.sorcier_btn)
 		while self.running:
+		
+			# Partie Travail #
 			
 			dt = self.clock.tick(30)/1000	
 			Keys = pygame.key.get_pressed()		
@@ -407,6 +419,8 @@ class MainGame():
 				elif event.type == difficulte_crescendo_event:
 					self.spawn_chance += 0.005
 
+			
+			# PARTIE GRAPHIQUE #
 
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
@@ -452,6 +466,7 @@ class MainGame():
 			self.update_counters()
 			pygame.display.flip()
 			
+		# On calcule cb de temps le joueur a survécu
 		self.survival_time = datetime.datetime.now() - self.begin_time
 			
 						
@@ -471,7 +486,7 @@ if __name__ == "__main__":
 	Game.screen = screen
 	Game.loop()
 	print("T'as perdu noob")
-	print(f"T'as survécu {Game.survival_time}")
+	print(f"Temps Survécu: {Game.survival_time}")
 	pygame.quit()
 	
 	

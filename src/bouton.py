@@ -22,13 +22,16 @@ class Button():
 		
 	def click(self, game):
 		"""
+		TRAVAIL
 		Fonction exécutée quand le self.rectangle est cliqué (le bouton quoi)
 		@param game: objet MainGame
 		"""
 		pass
 		
 	def render(self, screen):
-		"""Fonction qui affiche le bouton sur l'écran
+		"""
+		GRAPHIQUE
+		Fonction qui affiche le bouton sur l'écran
 		@param screen: l'écran
 		"""
 

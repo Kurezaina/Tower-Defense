@@ -1,4 +1,4 @@
-# Multiplicateur pour convertir les coordonnées sur le tableau en coordonnées en pixel
+# Multiplicateur pour convertir les coordonnées sur le tableau en coordonnées en pixel (Interface)
 scale_factor = 0
 
 # Indique dans la matrice du jeu si on peut placer une tour sur cette tuile
@@ -7,5 +7,5 @@ TILE_PLACEMENT = 9
 # Dossier avec les polices (nécéssaire pour afficher du texte avec pygame).
 font_dossier = None
 
-# Objet MainGame
+# Objet MainGame accessible à tous les fichiers (plus pratique)
 game = None
