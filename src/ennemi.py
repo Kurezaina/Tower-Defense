@@ -110,34 +110,7 @@ return: True ou False"""
 		self.image = next_frame
 		
 		self.frame += 1
-		
 
-	def mouvement_pixel(self):
-		# TODO, NE FONCTIONNE PAS!
-
-		return
-		w, h = pygame.display.get_surface().get_size()
-
-		diff = (
-		self.node.cos[0] * (w * 1.6 / 100) - self.cos_pixel[0], self.node.cos[1] * (w * 1.6 / 100) - self.cos_pixel[1])
-		mouvement = (0, 0)
-		if diff[1] > 0:
-			mouvement = (0, scale_factor)
-		elif diff[1] < 0:
-			mouvement = (0, scale_factor)
-		elif diff[0] > 0:
-			mouvement = (scale_factor, 0)
-		elif diff[0] < 0:
-			mouvement = (scale_factor, 0)
-
-		nouv_cos = (self.cos_pixel[0] + mouvement[0], self.cos_pixel[1] + mouvement[1])
-		self.cos_pixel = nouv_cos
-
-		if nouv_cos[0] % (w * 0.016) == 0 or nouv_cos[1] % (w * 0.016) == 0:
-			self.mouvement_board()
-
-		self.update_chemin()
-		
 	def kill(self):
 		"""Retire l'unité de la matrice du jeu"""
 		

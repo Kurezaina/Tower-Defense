@@ -61,6 +61,16 @@ class Tour():
 		w, h = pygame.display.get_surface().get_size()
 		
 		self.cos_pixel = ((self.center_tile[0]-1)*(w*1.6/100), (self.center_tile[1]-1)*(w*1.6/100))
+		
+	def despawn(self, board):
+		""" 
+		Fait disparaitre la tour dans la matrice du jeu
+		@param board: la matrice		
+		"""
+		for c in range(3):
+			for r in range(3):
+				board[self.center_tile[1]-1+c][self.center_tile[0]-1+r] = common.TILE_PLACEMENT
+						
 	def targetable_minions(self, minions):
 		"""
 		Calcule la distance entre les ennemis et la tour pour savoir si ils sont à portée d'attaque.

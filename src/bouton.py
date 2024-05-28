@@ -25,6 +25,7 @@ class Button():
 		Fonction exécutée quand le self.rectangle est cliqué (le bouton quoi)
 		@param game: objet MainGame
 		"""
+		pass
 		
 	def render(self, screen):
 		"""Fonction qui affiche le bouton sur l'écran
@@ -41,12 +42,23 @@ class Button():
 		screen.blit(surf, (self.x, self.y))
 		
 		
+class Delete_tour_button(Button):
+	def __init__(self,x,y,w,h, sprite=None, color=(125,0,0)):
+		super(Delete_tour_button, self).__init__(x,y,w,h, color=color, sprite=sprite)
+		self.toggled = False
+	def click(self, game):
+		game.tower_to_place = None
+		game.deleting_tower = not self.toggled
+		self.toggled = not self.toggled
+		
+		
+		
+		
 class Tour_selection_bouton(Button):
 	def __init__(self, x,y,w,h, tower=Archer, sprite=None, color=(255,255,255)):
 		super(Tour_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=None)
 		self.sprite = sprite
 		self.font = pygame.font.Font(os.path.join(common.font_dossier, "Montserrat-Regular.ttf"))
-		print(self.color)
 	def render(self, screen):
 
 		surf = pygame.Surface((self.rectangle.w, self.rectangle.h)).convert_alpha()
@@ -62,20 +74,24 @@ class Tour_selection_bouton(Button):
 			surf.blit(self.font.render(str(cout), True, text_color), (0,80))
 			
 		screen.blit(surf, (self.x, self.y))
-
-class Archer_build_selection_bouton(Tour_selection_bouton):
-	def __init__(self,x,y,w,h, tower=Archer, color=None, sprite=None):
-		super(Archer_build_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=sprite)
-		self.tower = tower
 		
 		
 	def click(self, game):
+	
+		game.deleting_tower = False
 		if not self.toggled:
 			game.tower_to_place = self.tower
 			self.toggled = True
 		else:
 			game.tower_to_place = None
 			self.toggled = False
+		
+
+class Archer_build_selection_bouton(Tour_selection_bouton):
+	def __init__(self,x,y,w,h, tower=Archer, color=None, sprite=None):
+		super(Archer_build_selection_bouton, self).__init__(x,y,w,h, color=color, sprite=sprite)
+		self.tower = tower
+		
 
 
 class Sorcier_build_selection_bouton(Tour_selection_bouton):
@@ -84,11 +100,3 @@ class Sorcier_build_selection_bouton(Tour_selection_bouton):
 		self.tower = tower
 		
 		
-	def click(self, game):
-		if not self.toggled:
-			game.tower_to_place = self.tower
-			self.toggled = True
-		else:
-			game.tower_to_place = None
-			self.toggled = False
-

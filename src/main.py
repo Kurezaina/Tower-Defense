@@ -4,8 +4,8 @@ import pygame
 import os
 from math import sqrt, dist, floor
 import operator
+import datetime
 
-import itertools as it
 # Pour les maps de tiled
 from pytmx import load_pygame
 
@@ -21,7 +21,6 @@ from ennemi import Vague, Minion
 from bouton import *
 
 dossier = os.path.dirname(os.path.realpath(__file__))
-Game = 0
 pygame.display.set_caption("Tower Défense")
 
 def pixels_to_tile(pixels):
@@ -30,6 +29,10 @@ def pixels_to_tile(pixels):
 
 class MainGame():
 	def __init__(self):
+		self.deleting_tower = False
+		
+		self.begin_time = datetime.datetime.now()
+		self.survival_time = None
 		# 
 		self.defeat = False
 		# La chance qu'un mob apparaisse toutes les 50ms.
@@ -103,13 +106,7 @@ class MainGame():
 		self.fireball_img = None
 		self.animations = self.load_animations()
 		self.minion.animations = self.animations
-		tour = Sorcier(self)
-		tour.sprite = self.mage_img
-		
-		tour.center_tile = (35,55)
-		tour.spawn(self.board)
-		
-		self.tours.append(tour)
+
 				
 	def load_animations(self):
 		animations = {}
@@ -161,22 +158,22 @@ class MainGame():
 									
 	def init_chemins(self):
 		# Initialise les graphes des chemins
-		self.graphe_chemin_1 = Graph_node(cos=(27,87))
+		self.graphe_chemin_1 = Graph_node(cos=(25,87))
 		
-		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(27,58)))
-		self.graphe_chemin_2 = Graph_node(cos=(39,61))
+		ch1 = self.graphe_chemin_1.ajout_sortie(Graph_node(cos=(25,58)))
+		self.graphe_chemin_2 = Graph_node(cos=(39,61)) 
 		
-		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,57)))
+		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,58)))
 		
 		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,47)), 1)
-		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,57)), 0.25)
+		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,58)), 0.25)
 		
 		self.graphe_chemin_2.ajout_sortie(ch1)
 		
 		# Chemin de gauche
 		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,47)),0.75)
 		nv = nv.ajout_sortie(Graph_node(cos=(23,18)))
-		nv = nv.ajout_sortie(Graph_node(cos=(50,18)))
+		nv = nv.ajout_sortie(Graph_node(cos=(50,19)))
 		millieu_3 = nv.ajout_sortie(Graph_node(cos=(50,10)))
 		
 		
@@ -193,7 +190,7 @@ class MainGame():
 		# Chemin de droite
 		ch4 = ch3.ajout_sortie(Graph_node(cos=(49,58)))
 		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,58)))
-		ch4 = ch4.ajout_sortie(Graph_node(cos=(72,20)))
+		ch4 = ch4.ajout_sortie(Graph_node(cos=(73,21)))
 		ch4.ajout_sortie(nv)
 		
 
@@ -271,6 +268,7 @@ class MainGame():
 		for ennemi, spawn in self.ennemies_in_vague:
 			print(spawn)
 			for _ in range(spawn):
+				continue
 				minion = ennemi()
 				minion.animations = self.animations[str(ennemi())]				
 				minion.board = self.board
@@ -295,21 +293,21 @@ class MainGame():
 		minions_surface = pygame.Surface((self.mapdata.tilewidth*self.mapdata.tiled_map_size[0],self.mapdata.tilewidth*self.mapdata.tiled_map_size[1]), pygame.SRCALPHA, 32).convert_alpha()
 						
 
-		# Toutes les 250ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
-		move_event, t, trail = pygame.USEREVENT+1, 400, []		
+		# Toutes les 300ms on lance l'event move_event qui fera que la fonction self.update_all_mvmt() sera appelée.
+		move_event, t, _ = pygame.USEREVENT+1, 300, []		
 		
 		# Event pour l'attaque des tours toutes les 900ms
-		tour_event, t2, trail2 = pygame.USEREVENT+2, 900, []		
+		tour_event, t2, _ = pygame.USEREVENT+2, 900, []		
 		
-		# Event pour le spawn des ennemis toutes les 900ms						
-		minion_spawn_roll_event, t3, trail3 = pygame.USEREVENT+3, 75, []								
+		# Event pour le spawn des ennemis toutes les 65ms						
+		minion_spawn_roll_event, t3, _ = pygame.USEREVENT+3, 65, []								
 			
 										
 		# Event pour le gain d'or toutes les secondes ms
-		gold_income_event, t4, trail4 = pygame.USEREVENT+4, 1000, []								
+		gold_income_event, t4, _ = pygame.USEREVENT+4, 1000, []								
 
 		# Event pour le spawn d'un mob de la vague actuelle
-		curr_wave_spawn_event, t5, trail5 = pygame.USEREVENT+5, 300, []		
+		curr_wave_spawn_event, t5, _ = pygame.USEREVENT+5, 300, []		
 								
 		# Event pour l'augmentation progressive de la difficulté.
 		difficulte_crescendo_event, t6, _ = pygame.USEREVENT+6, 5000, []	
@@ -326,10 +324,14 @@ class MainGame():
 		""" Les boutons """
 		archer_btn_icon = pygame.transform.scale(self.tour_img, (100,80))
 		sorcier_btn_icon = pygame.transform.scale(self.mage_img, (100,80))
+		hammer_btn_icon = pygame.transform.scale(self.hammer_img, (100,100))
 		
 		self.archer_btn = Archer_build_selection_bouton(w-100,100,100,100, color=(0,0,0), sprite=archer_btn_icon)
 		self.sorcier_btn = Sorcier_build_selection_bouton(w-100,250,100,100, color=(0,0,0), sprite=sorcier_btn_icon)
 		
+		self.delete_btn = Delete_tour_button(w-100,400,100,100, color=(125,0,0), sprite=hammer_btn_icon)
+		
+		self.boutons.append(self.delete_btn)		
 		self.boutons.append(self.archer_btn)
 		self.boutons.append(self.sorcier_btn)
 		while self.running:
@@ -383,6 +385,12 @@ class MainGame():
 							self.update_counters()
 
 						print(cos_tile)
+					elif self.deleting_tower:
+						tour = [i for i in self.tours if i.center_tile == cos_tile]
+						tour = tour[0] if len(tour) > 0 else None
+						if tour:
+							tour.despawn(self.board)
+							self.tours.remove(tour)
 					
 				elif event.type == curr_wave_spawn_event:
 					tile_difference = random.choice([-1,0])
@@ -402,13 +410,13 @@ class MainGame():
 
 			mouse_pos = pygame.mouse.get_pos()				
 			if self.bottom_camera_move.collidepoint(mouse_pos):
-				self.y_off -= 48 if self.y_off > -w*1.6 + h else 0
+				self.y_off -= 32 if self.y_off > -w*1.6 + h else 0
 			if self.top_camera_move.collidepoint(mouse_pos):
-				self.y_off += 48 if self.y_off < 0 else 0
+				self.y_off += 32 if self.y_off < 0 else 0
 			if self.right_camera_move.collidepoint(mouse_pos):
-				self.x_off -= 48 if self.x_off > -25*common.scale_factor else 0
+				self.x_off -= 32 if self.x_off > -25*common.scale_factor else 0
 			if self.left_camera_move.collidepoint(mouse_pos):
-				self.x_off += 48 if self.x_off < -48 else 0
+				self.x_off += 32 if self.x_off < -32 else 0
 				
 				
 
@@ -418,7 +426,7 @@ class MainGame():
 
 
 
-			if self.tower_to_place:
+			if self.tower_to_place or self.deleting_tower:
 				self.screen.blit(surface_placement, (self.x_off,self.y_off))
 			else:
 				self.screen.blit(surface, (self.x_off,self.y_off))
@@ -444,6 +452,7 @@ class MainGame():
 			self.update_counters()
 			pygame.display.flip()
 			
+		self.survival_time = datetime.datetime.now() - self.begin_time
 			
 						
 if __name__ == "__main__":
@@ -462,6 +471,7 @@ if __name__ == "__main__":
 	Game.screen = screen
 	Game.loop()
 	print("T'as perdu noob")
+	print(f"T'as survécu {Game.survival_time}")
 	pygame.quit()
 	
 	
