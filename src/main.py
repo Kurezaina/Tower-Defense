@@ -164,20 +164,20 @@ class MainGame():
 		
 		ch1 = ch1.ajout_sortie(Graph_node(cos=(39,58)))
 		
-		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,47)), 1)
+		ch_gauche_1 = ch1.ajout_sortie(Graph_node(cos=(38,46)), 1)
 		ch_millieu_1 = ch1.ajout_sortie(Graph_node(cos=(49,58)), 0.25)
 		
 		self.graphe_chemin_2.ajout_sortie(ch1)
 		
 		# Chemin de gauche
-		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,47)),0.75)
+		nv = ch_gauche_1.ajout_sortie(Graph_node(cos=(23,46)),0.75)
 		nv = nv.ajout_sortie(Graph_node(cos=(23,18)))
 		nv = nv.ajout_sortie(Graph_node(cos=(50,19)))
 		millieu_3 = nv.ajout_sortie(Graph_node(cos=(50,10)))
 		
 		
 		# Chemin du millieu
-		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(50,47)), 0.25)
+		millieu_2 = ch_millieu_1.ajout_sortie(Graph_node(cos=(50,46)), 0.25)
 		millieu_2.ajout_sortie(millieu_3)
 		ch_gauche_1.ajout_sortie(millieu_2, 0.25)
 		
