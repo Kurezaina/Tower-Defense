@@ -84,8 +84,8 @@ class MainGame():
 
 
 		# OR
-		self.gold = 500
-		self.gold_income = 25
+		self.gold = 1250
+		self.gold_income = 30
 		self.gold_squelette = 7
 		self.gold_gobelin = 5		
 
@@ -416,7 +416,7 @@ class MainGame():
 						self.spawn_stack.pop(0)			
 						
 				elif event.type == difficulte_crescendo_event:
-					self.spawn_chance += 0.005
+					self.spawn_chance += 0.006
 
 			
 			# PARTIE GRAPHIQUE #

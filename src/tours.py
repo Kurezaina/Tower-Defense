@@ -113,7 +113,7 @@ class Archer(Tour):
 		super(Archer, self).__init__()
 		self.rayon_atk = 20
 		self.hp = 1000
-		self.damage = 125		
+		self.damage = 143
 		self.arrow_img = game.arrow_img
 		self.sprite = game.tour_img
 		self.cost = 500
@@ -127,7 +127,7 @@ class Sorcier(Tour):
 		self.rayon_atk = 10
 		self.rayon_aoe = 2
 		self.hp = 1000
-		self.damage = 250
+		self.damage = 200
 		self.cost = 1250
 		self.arrow_img = game.fireball_img
 		self.sprite = game.mage_img
