@@ -3,7 +3,6 @@
 import pygame
 import os
 from math import sqrt, dist, floor
-import operator
 import datetime
 
 # Pour les maps de tiled
